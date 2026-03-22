@@ -2,348 +2,375 @@
 
 ## Purpose of this Document
 
-This document is written for the frontend developers working on the TalentFlow Learning Platform. It explains only the parts the frontend team needs in order to build the LMS in a clean, scalable, and collaborative way using React.js, VS Code, and GitHub.
+This document is written for the frontend developers working on the TalentFlow Learning Platform. It reflects the current frontend direction after the architecture update from React with Vite to Next.js with the App Router.
 
-The goal is not just to build screens. The goal is to help four developers work as one organized frontend team. That means:
+The purpose of this guide is to keep the frontend team aligned on:
 
-- structuring the codebase clearly
-- splitting work safely
-- converting UI designs into reusable React components
-- using GitHub without stepping on each other's code
-- keeping the project maintainable as more LMS pages are added
+- project structure
+- team collaboration rules
+- Next.js App Router usage
+- reusable component design
+- feature ownership
+- GitHub workflow
+- migration of the original React code into the new Next.js structure
 
-## Core Pages the Frontend Must Support
+This guide focuses only on what the frontend team needs to build and maintain the LMS cleanly as a shared production codebase.
 
-The current LMS screens from the UI/UX team are:
+## Current Frontend Direction
 
-- Landing Page
-- Sign Up
-- Sign In
-- Dashboard (Learner)
-- Course Catalog (Explore Courses)
-- Course Details
-- Lesson / Content Page
-- Assignment Submission
-- Progress Tracking
-- Collaboration / Discussion
+The frontend stack has been updated.
+
+The original project started as a React.js project with a custom structure. That work is not being thrown away. Instead, the project is now being adapted into a more scalable Next.js codebase so the team can benefit from:
+
+- file-based routing
+- server components by default
+- better layout handling
+- cleaner page organization
+- easier long-term scalability for a production LMS
+
+The preferred architecture is now Next.js with the App Router.
+
+## LMS Areas the Frontend Must Support
+
+The frontend architecture must support the core TalentFlow LMS experience:
+
+- Landing page
+- Sign in
+- Sign up
+- Student dashboard
+- Instructor dashboard
+- Course discovery pages
+- Course details pages
+- Video learning pages
+- Progress tracking
+- Assignment experiences
 - Notifications
-- User Profile
+- Discussion and collaboration areas
+- User profile
+- Admin interface
 
-These pages are enough to define the first frontend architecture. Minor pages can be added later, but the structure should be built around these core screens from the beginning.
+This means the architecture should support multiple user roles and multiple product areas without becoming hard to maintain.
 
 ## Recommended Frontend Stack
 
-The frontend team already knows HTML, CSS, and JavaScript. To make the move into React smooth, the recommended stack is:
+The current stack should be:
 
-- React with Vite
-- React Router for navigation
-- Axios for API requests
-- CSS Modules for component-level styling
-- Context API for shared state such as authentication
+- Next.js with App Router
+- React
+- Axios for API communication
+- CSS Modules for scoped component styling
+- shared `src/features` modules for business logic
+- reusable `src/components` folders for UI and layout
 
 Why this stack is recommended:
 
-- Vite is fast and simple to set up.
-- React Router gives the LMS clean page-based navigation.
-- Axios keeps API requests organized.
-- CSS Modules are easier for HTML/CSS developers than more advanced styling systems.
-- Context API is enough for the first version of shared application state.
+- Next.js organizes routing more naturally than manual React Router setup.
+- App Router makes nested layouts and route-level organization easier.
+- Server components reduce unnecessary client-side JavaScript.
+- CSS Modules remain beginner-friendly for developers with HTML and CSS experience.
+- Shared service and feature layers keep the code easier for multiple developers to work on.
 
 ## Project Setup in VS Code
 
-Create the project with the following commands:
+Create or run the project with:
 
 ```bash
-npm create vite@latest talentflow-learning-platform -- --template react
-cd talentflow-learning-platform
 npm install
-npm install react-router-dom axios
 npm run dev
 ```
 
-After setup, open the folder in VS Code and create the internal structure described below.
+If a new Next.js project needs to be created from scratch in the future, the recommended command is:
 
-## Recommended Folder Structure
+```bash
+npx create-next-app@latest talentflow-learning-platform
+```
+
+## Recommended Next.js Folder Structure
 
 ```text
 talentflow-learning-platform/
-├── public/
-│   ├── favicon.ico
-│   └── images/
-├── src/
-│   ├── assets/
-│   │   ├── images/
-│   │   ├── icons/
-│   │   └── illustrations/
-│   ├── components/
-│   │   ├── common/
-│   │   │   ├── Button/
-│   │   │   ├── Input/
-│   │   │   ├── Modal/
-│   │   │   ├── Card/
-│   │   │   ├── Loader/
-│   │   │   ├── Badge/
-│   │   │   ├── Avatar/
-│   │   │   └── EmptyState/
-│   │   ├── layout/
-│   │   │   ├── Navbar/
-│   │   │   ├── Sidebar/
-│   │   │   ├── Header/
-│   │   │   ├── Footer/
-│   │   │   └── DashboardLayout/
-│   │   └── features/
-│   │       ├── landing/
-│   │       ├── auth/
-│   │       ├── dashboard/
-│   │       ├── courses/
-│   │       ├── lessons/
-│   │       ├── assignments/
-│   │       ├── progress/
-│   │       ├── discussions/
-│   │       ├── notifications/
-│   │       └── profile/
-│   ├── pages/
-│   │   ├── Landing/
-│   │   │   └── LandingPage.jsx
-│   │   ├── Auth/
-│   │   │   ├── SignInPage.jsx
-│   │   │   └── SignUpPage.jsx
-│   │   ├── Dashboard/
-│   │   │   └── DashboardPage.jsx
-│   │   ├── Courses/
-│   │   │   ├── CourseCatalogPage.jsx
-│   │   │   └── CourseDetailsPage.jsx
-│   │   ├── Lessons/
-│   │   │   └── LessonPage.jsx
-│   │   ├── Assignments/
-│   │   │   └── AssignmentSubmissionPage.jsx
-│   │   ├── Progress/
-│   │   │   └── ProgressTrackingPage.jsx
-│   │   ├── Discussions/
-│   │   │   └── DiscussionPage.jsx
-│   │   ├── Notifications/
-│   │   │   └── NotificationsPage.jsx
-│   │   ├── Profile/
-│   │   │   └── UserProfilePage.jsx
-│   │   └── NotFoundPage.jsx
-│   ├── routes/
-│   │   ├── AppRouter.jsx
-│   │   ├── ProtectedRoute.jsx
-│   │   └── PublicRoute.jsx
-│   ├── services/
-│   │   ├── api.js
-│   │   ├── authService.js
-│   │   ├── courseService.js
-│   │   ├── lessonService.js
-│   │   ├── assignmentService.js
-│   │   ├── progressService.js
-│   │   ├── discussionService.js
-│   │   ├── notificationService.js
-│   │   └── profileService.js
-│   ├── context/
-│   │   ├── AuthContext.jsx
-│   │   ├── NotificationContext.jsx
-│   │   └── AppContext.jsx
-│   ├── hooks/
-│   │   ├── useAuth.js
-│   │   ├── useCourses.js
-│   │   ├── useAssignments.js
-│   │   └── useNotifications.js
-│   ├── utils/
-│   │   ├── constants.js
-│   │   ├── formatters.js
-│   │   ├── validators.js
-│   │   └── storage.js
-│   ├── styles/
-│   │   ├── globals.css
-│   │   ├── variables.css
-│   │   └── reset.css
-│   ├── App.jsx
-│   └── main.jsx
-├── .gitignore
-├── package.json
-├── README.md
-└── vite.config.js
++-- public/
+�   +-- favicon.ico
+�   +-- images/
++-- src/
+�   +-- app/
+�   �   +-- layout.js
+�   �   +-- page.js
+�   �   +-- globals.css
+�   �   +-- (auth)/
+�   �   �   +-- login/
+�   �   �   �   +-- page.js
+�   �   �   +-- signup/
+�   �   �       +-- page.js
+�   �   +-- (student)/
+�   �   �   +-- student/
+�   �   �       +-- dashboard/
+�   �   �           +-- page.js
+�   �   +-- (instructor)/
+�   �   �   +-- instructor/
+�   �   �       +-- dashboard/
+�   �   �           +-- page.js
+�   �   +-- (admin)/
+�   �   �   +-- admin/
+�   �   �       +-- page.js
+�   �   +-- courses/
+�   �   �   +-- page.js
+�   �   �   +-- [courseId]/
+�   �   �       +-- page.js
+�   �   +-- learn/
+�   �       +-- [courseId]/
+�   �           +-- [lessonId]/
+�   �               +-- page.js
+�   +-- assets/
+�   �   +-- images/
+�   �   +-- icons/
+�   �   +-- illustrations/
+�   +-- components/
+�   �   +-- ui/
+�   �   +-- layout/
+�   �   +-- course/
+�   �   +-- dashboard/
+�   +-- features/
+�   �   +-- auth/
+�   �   +-- courses/
+�   �   +-- dashboard/
+�   �   +-- progress/
+�   �   +-- video-learning/
+�   �   +-- admin/
+�   +-- hooks/
+�   +-- services/
+�   �   +-- api.js
+�   +-- utils/
+�   +-- styles/
++-- .gitignore
++-- jsconfig.json
++-- next.config.mjs
++-- package.json
++-- README.md
 ```
 
 ## What Each Main Folder Is Responsible For
 
-### public/
+### src/app/
 
-This folder contains files that should be served directly by the browser without React processing. Examples include the favicon and static images that do not need to be imported into components.
+This is the heart of the Next.js application.
 
-### src/assets/
+It replaces the old React Router structure. Instead of manually wiring routes in a routing file, every route now lives in the file system.
 
-This folder stores design assets used inside the React app. It should contain images, icons, and illustrations that components import directly.
+Examples:
 
-Use `src/assets` when the file belongs to the application and is part of the component or page code.
+- `src/app/page.js` is the home page.
+- `src/app/(auth)/login/page.js` is the login page.
+- `src/app/courses/[courseId]/page.js` is a dynamic course details page.
+
+Important rule:
+
+Use `src/app` for route entry points, layout files, loading files, and route-level composition.
+
+### Route Groups
+
+Folders like `(auth)`, `(student)`, `(instructor)`, and `(admin)` are route groups.
+
+They help organize pages by role or workflow without changing the URL.
+
+That means:
+
+- `(auth)/login/page.js` becomes `/login`
+- `(student)/student/dashboard/page.js` becomes `/student/dashboard`
+
+This is useful in an LMS because the app supports different user experiences for students, instructors, and admins.
 
 ### src/components/
 
-This is where reusable UI pieces live.
+This folder holds reusable presentation components.
 
-#### components/common/
+Recommended subfolders:
 
-Use this folder for generic building blocks that can appear on many pages. Examples:
+- `ui/` for generic reusable UI pieces such as buttons, inputs, badges, modals, loaders, tabs, and cards
+- `layout/` for shared page shells such as headers, sidebars, navbars, content shells, and dashboard wrappers
+- `course/` for reusable course presentation pieces such as course cards, curriculum blocks, instructor cards, and lesson summaries
+- `dashboard/` for reusable dashboard widgets and summaries
 
-- Button
-- Input
-- Modal
-- Loader
-- Card
-- Badge
+These components should stay as reusable as possible.
 
-These should not contain page-specific logic. A `Button` component should be reusable on Sign In, Profile, and Assignment pages without changing its core purpose.
+### src/features/
 
-#### components/layout/
-
-Use this folder for the shared page shell. Examples:
-
-- Navbar
-- Sidebar
-- Header
-- Footer
-- DashboardLayout
-
-These components help keep the LMS layout consistent across pages. For example, the learner dashboard, course catalog, lesson page, and profile page may all use the same sidebar and header structure.
-
-#### components/features/
-
-Use this folder for components that belong to one product area only. Examples:
-
-- course cards and filters under `features/courses`
-- lesson navigation inside `features/lessons`
-- assignment upload widgets inside `features/assignments`
-
-This helps separate reusable global components from feature-specific ones.
-
-### src/pages/
-
-This folder contains route-level pages. Each file here represents a full screen that matches a UI/UX design page.
+This folder groups frontend code by business domain.
 
 Examples:
 
-- `LandingPage.jsx` for the public homepage
-- `CourseCatalogPage.jsx` for the list of available courses
-- `UserProfilePage.jsx` for learner profile management
+- `features/auth/`
+- `features/courses/`
+- `features/dashboard/`
+- `features/progress/`
+- `features/video-learning/`
+- `features/admin/`
 
-Each page should compose smaller components instead of becoming very large.
+This layer is where feature logic, API coordination, view models, helpers, and feature-specific reusable pieces can live.
 
-### src/routes/
-
-This folder controls navigation.
-
-- `AppRouter.jsx` defines all routes.
-- `ProtectedRoute.jsx` blocks unauthorized users from private pages.
-- `PublicRoute.jsx` helps manage public screens such as Sign In and Sign Up.
-
-This separation prevents routing logic from being mixed into page files.
-
-### src/services/
-
-This folder holds API communication logic only.
-
-Examples:
-
-- `authService.js` for login and signup endpoints
-- `courseService.js` for fetching courses
-- `assignmentService.js` for submitting assignments
-
-Why this matters:
-
-- page files stay focused on UI
-- API logic stays reusable and easy to update
-- backend endpoint changes can be fixed in one place
-
-### src/context/
-
-This folder contains global shared state. It should be used when many parts of the app need access to the same information.
-
-Examples:
-
-- logged-in user
-- auth token
-- notification counts
-
-Do not put every piece of state here. Only put state here if multiple pages or many components need it.
+This is important because it separates domain behavior from generic UI.
 
 ### src/hooks/
 
-This folder stores reusable custom React hooks.
+This folder stores reusable hooks.
 
 Examples:
 
 - `useAuth.js`
 - `useCourses.js`
+- `useProgress.js`
 - `useNotifications.js`
 
-These help extract repeated logic and keep components smaller.
+Keep hooks small and focused.
 
-### src/utils/
+### src/services/
 
-This folder stores helper logic that does not belong to a component.
+This folder contains API communication only.
 
 Examples:
 
-- input validation helpers
-- formatting dates
-- storing data in local storage
-- constants for route names or status labels
+- `api.js` for the shared Axios instance
+- `authService.js`
+- `courseService.js`
+- `progressService.js`
+- `adminService.js`
+
+Do not scatter raw API calls across pages and components.
+
+### src/utils/
+
+Use this folder for helpers that are not components and not feature-specific.
+
+Examples:
+
+- constants
+- validators
+- formatters
+- storage helpers
+- route helpers
 
 ### src/styles/
 
-Use this folder only for app-wide styles:
+Use this folder for shared styling resources:
 
-- reset styles
 - design variables
-- body and typography defaults
+- reset styles
+- shared utility classes if the team needs them
 
-Avoid putting page-specific styles here. Those should stay close to the relevant component.
+Global styling should stay limited.
 
 ## Naming Conventions
 
-To keep the codebase consistent, the team should use the same naming rules.
+Use the following rules across the team:
 
-- Components: PascalCase, for example `CourseCard.jsx`
-- Pages: PascalCase ending with `Page`, for example `DashboardPage.jsx`
-- Hooks: camelCase starting with `use`, for example `useAuth.js`
-- Services: camelCase ending with `Service`, for example `courseService.js`
-- CSS Modules: same component name, for example `Button.module.css`
-- Constants and helper files: camelCase, for example `validators.js`
+- route files in `app/`: `page.js`, `layout.js`, `loading.js`, `error.js`
+- reusable components: PascalCase, for example `CourseCard.jsx`
+- hooks: camelCase starting with `use`, for example `useAuth.js`
+- services: camelCase ending with `Service`, for example `courseService.js`
+- CSS Modules: component-based names such as `CourseCard.module.css`
+- utility files: camelCase such as `formatters.js`
 
-Why this matters:
+These conventions help multiple developers navigate the repo quickly.
 
-- developers can guess file purpose quickly
-- imports become easier to read
-- review becomes faster
+## Server Components and Client Components
 
-## How to Split Work Across 4 Developers
+Next.js App Router uses server components by default.
 
-A four-person team should divide the project by feature ownership, while keeping shared components coordinated.
+This means the team should follow this rule:
 
-Recommended ownership:
+- use server components by default
+- use client components only when needed
 
-- Developer 1: Landing, Sign Up, Sign In, auth flow, protected routes
-- Developer 2: Dashboard, Navbar, Sidebar, Header, shared layout system
-- Developer 3: Course Catalog, Course Details, Lesson Page
-- Developer 4: Assignment Submission, Progress Tracking, Discussions, Notifications, User Profile
+Use a client component only if the file needs:
+
+- `useState`
+- `useEffect`
+- browser APIs
+- event-heavy interactivity
+- client-side form handling
+- third-party client-only libraries
+
+If a file needs to be a client component, add:
+
+```js
+"use client";
+```
+
+at the top of the file.
+
+This rule keeps the app more efficient and encourages cleaner separation of responsibilities.
+
+## How Pages Should Be Built in Next.js
+
+Each route page in `src/app` should stay relatively small.
+
+The route page should:
+
+- fetch or assemble page-level data
+- connect the correct layout
+- compose feature and UI components
+
+The route page should not become a giant file full of repeated markup.
+
+Example approach:
+
+- `src/app/courses/page.js` should compose course discovery UI
+- `src/components/course/CourseCard.jsx` should render a single course card
+- `src/features/courses/` should hold course-related logic or composite feature sections
+
+## Suggested Route Map
+
+Recommended TalentFlow routes:
+
+```text
+/
+/login
+/signup
+/student/dashboard
+/instructor/dashboard
+/courses
+/courses/[courseId]
+/learn/[courseId]/[lessonId]
+/admin
+```
+
+Additional routes can be added later for:
+
+- assignments
+- notifications
+- discussions
+- profile
+- analytics
+- admin sub-pages
+
+## How to Split Work Across Multiple Frontend Developers
+
+Recommended ownership for a multi-developer team:
+
+- Developer 1: auth routes, auth feature logic, login, signup
+- Developer 2: student dashboard and shared learner layout
+- Developer 3: instructor dashboard, course pages, and learning pages
+- Developer 4: admin area, progress tracking, and shared platform utilities
 
 Shared ownership:
 
-- `components/common`
-- `styles/variables.css`
-- route registration review
+- `components/ui`
+- `components/layout`
+- `services/api.js`
+- `styles/variables`
+- route group conventions
 
-Important working rule:
+Important rule:
 
-Only one developer should make major structural changes to shared files at a time. Shared files include:
+When editing shared files, communicate first.
 
-- `AppRouter.jsx`
-- `AuthContext.jsx`
-- `DashboardLayout.jsx`
-- global style files
+Shared files that should not be changed casually by multiple developers at the same time include:
 
-When more than one person needs those files, coordinate before coding.
+- `src/app/layout.js`
+- shared layout wrappers
+- top-level navigation
+- shared UI primitives
+- API base configuration
 
 ## GitHub Repository Workflow
 
@@ -353,7 +380,7 @@ Use one frontend repository with these long-lived branches:
 - `staging` for QA and demo validation
 - `develop` for team integration
 
-Each developer should work from a feature branch.
+Each developer should work from a feature branch created from `develop`.
 
 ### Branch naming examples
 
@@ -368,412 +395,231 @@ Each developer should work from a feature branch.
 - `feature/discussions`
 - `feature/notifications`
 - `feature/profile-page`
+- `feature/admin-interface`
 
-### Commit naming examples
-
-- `feat: build sign in page UI`
-- `feat: add course catalog filter bar`
-- `fix: correct mobile sidebar overlap`
-- `refactor: extract assignment upload card`
-- `style: improve dashboard spacing`
-
-### Pull request expectations
-
-Each pull request should:
-
-- focus on one feature or one small unit of work
-- include screenshots if the change affects UI
-- explain what was built
-- explain anything still missing
-- be reviewed by at least one teammate
-
-### Safe collaboration flow
-
-Use this workflow every time:
+### Collaboration flow
 
 1. Pull the latest `develop`
 2. Create a new feature branch
-3. Build the assigned work
+3. Implement the assigned work
 4. Test locally
 5. Open a pull request into `develop`
 6. Fix review comments
 7. Merge after approval
+8. Promote stable builds to `staging`
+9. Promote release-ready code to `main`
 
 Commands:
 
 ```bash
 git checkout develop
 git pull origin develop
-git checkout -b feature/course-catalog
-git add .
-git commit -m "feat: build course catalog page structure"
-git push origin feature/course-catalog
+git checkout -b feature/signin-signup
 ```
 
 ## Suggested GitHub Issues and Milestones
 
-Create milestones around product sections:
+Suggested milestones:
 
-- Project Setup
+- Next.js migration
 - Authentication
-- Dashboard
+- Student dashboard
+- Instructor dashboard
 - Courses
-- Lessons
-- Assignments
-- Progress Tracking
-- Discussions
-- Notifications
-- Profile
-- Integration and Polish
+- Video learning
+- Progress tracking
+- Admin interface
+- Integration and polish
 
 Issue examples:
 
-- Setup React folder structure
-- Create dashboard layout shell
-- Build sign in form and validation
-- Create reusable course card component
-- Build course details page
-- Create lesson content layout
-- Create assignment upload UI
-- Build progress summary section
-- Implement notifications panel UI
-- Build profile update form
+- Migrate shared layout into App Router
+- Build login route in Next.js
+- Build signup route in Next.js
+- Create student dashboard shell
+- Build instructor dashboard widgets
+- Create course listing page
+- Build dynamic course details route
+- Build video learning lesson page
+- Build admin overview screen
+- Extract shared UI primitives for dashboards
 
-This makes it easier to assign, track, and review work.
+## Migration Guidance from the Original React Structure
 
-## React Implementation Guide
+The previous React structure should not be treated as wasted work.
 
-The frontend team is moving from HTML, CSS, and JavaScript into React. The correct way to do that is not to copy full HTML pages into one giant component. Instead, break every design into smaller pieces.
+Instead, the team should migrate it carefully.
 
-### Step 1: Start from a route page
+Map old ideas into the new structure like this:
 
-Each design screen should first become a page component in `src/pages/`.
+- old `src/pages` becomes route files in `src/app`
+- old `src/routes` is replaced by file-based routing in `src/app`
+- old reusable components stay reusable under `src/components`
+- old service files stay useful under `src/services`
+- old hooks and utilities can still be reused with minimal change
 
-Example:
+Migration principle:
 
-- UI/UX Sign In screen becomes `SignInPage.jsx`
-- UI/UX Course Catalog screen becomes `CourseCatalogPage.jsx`
+Do not try to rewrite everything at once. Move feature by feature.
 
-### Step 2: Convert static HTML into JSX
+Recommended migration order:
 
-When moving HTML into React:
+1. root layout and home page
+2. login and signup
+3. student dashboard
+4. instructor dashboard
+5. courses and course details
+6. video learning route
+7. progress and supporting features
+8. admin interface
 
-- change `class` to `className`
-- close self-closing tags like `img`, `input`, and `br`
-- use `{}` for dynamic values
-- replace repeated HTML blocks with components
+## Authentication Guidance
 
-### Step 3: Extract repeated UI
+For authentication in the new structure:
 
-If the same markup appears more than once, make it a reusable component.
+- route pages live in `src/app/(auth)/`
+- shared auth forms live in `src/features/auth/` or `src/components/ui/`
+- API calls live in `src/services/authService.js`
+- client interactivity should be isolated in form components that use `"use client"`
 
-Examples:
+This gives the team a clean split between route files, UI, and feature logic.
 
-- form fields
-- course cards
-- progress summary boxes
-- notifications list items
-- section titles
+## Dashboard Guidance
 
-### Step 4: Add props
+### Student Dashboard
 
-Props let one component work with different data.
+Should support:
 
-For example, a `CourseCard` can receive:
+- active learning summary
+- courses in progress
+- assignment reminders
+- recent notifications
+- progress overview
 
-- course title
-- instructor name
-- progress percentage
-- course thumbnail
+### Instructor Dashboard
 
-Instead of building many separate card files, use one flexible component.
+Should support:
 
-### Step 5: Add state only where needed
+- course management summaries
+- learner progress visibility
+- assignment and content management
+- performance snapshots
 
-Use local component state for:
+### Admin Interface
 
-- form values
-- modal visibility
-- tab switching
-- dropdown open state
+Should support:
 
-Use shared state for:
+- role and user management
+- platform monitoring
+- content oversight
+- reporting and administration
 
-- current authenticated user
-- global notification count
-- app-wide preferences if needed
+Each dashboard should reuse shared dashboard widgets where possible.
 
-## Page-to-Component Breakdown
+## Course and Learning Page Guidance
 
-### Landing Page
+### Course Pages
 
-Suggested structure:
+Recommended structure:
 
-- HeroSection
-- FeaturesSection
-- CoursePreviewSection
-- TestimonialsSection
-- CallToActionSection
-- Footer
+- course listing route in `src/app/courses/page.js`
+- course details route in `src/app/courses/[courseId]/page.js`
+- reusable course presentation components in `src/components/course/`
+- course business logic in `src/features/courses/`
 
-This page is mostly public and marketing-focused. It should remain separate from the logged-in learner layout.
+### Video Learning Pages
 
-### Sign In and Sign Up
+Recommended structure:
 
-Suggested structure:
-
-- AuthLayout
-- AuthHeader
-- SignInForm or SignUpForm
-- FormField
-- PasswordInput
-- SubmitButton
-- AuthIllustration
-
-These pages should reuse the same layout and form components where possible.
-
-### Dashboard
-
-Suggested structure:
-
-- DashboardLayout
-- WelcomeBanner
-- LearningStats
-- ContinueLearningSection
-- UpcomingAssignments
-- RecentNotifications
-
-This page should focus on summary information and quick actions.
-
-### Course Catalog
-
-Suggested structure:
-
-- PageHeader
-- SearchBar
-- FilterPanel
-- CourseGrid
-- CourseCard
-- Pagination
-
-This page should be built with reusable cards and filters, because the same patterns may be reused elsewhere.
-
-### Course Details
-
-Suggested structure:
-
-- CourseHero
-- CourseOverview
-- InstructorInfo
-- CourseCurriculum
-- EnrollButton or ContinueButton
-
-This page provides deeper information about one course.
-
-### Lesson / Content Page
-
-Suggested structure:
-
-- LessonHeader
-- LessonVideo or LessonContent
-- LessonResources
-- LessonNavigation
-- MarkCompleteButton
-
-This page should be designed to hold multiple content types later such as video, notes, PDFs, or embedded resources.
-
-### Assignment Submission
-
-Suggested structure:
-
-- AssignmentHeader
-- AssignmentInstructions
-- SubmissionForm
-- FileUpload
-- SubmissionStatus
-
-Keep upload UI isolated in its own component because file handling is usually more complex than normal forms.
-
-### Progress Tracking
-
-Suggested structure:
-
-- ProgressSummary
-- CompletedCourses
-- InProgressCourses
-- AchievementBadges
-- PerformanceChart placeholder
-
-Even if charts are added later, the page structure should allow them from the start.
-
-### Collaboration / Discussion
-
-Suggested structure:
-
-- DiscussionHeader
-- DiscussionList
-- DiscussionThread
-- CommentForm
-- ParticipantList
-
-Keep comment item components small and reusable.
-
-### Notifications
-
-Suggested structure:
-
-- NotificationsHeader
-- NotificationList
-- NotificationItem
-- EmptyState
-
-This feature can later connect to live updates, so keep it modular.
-
-### User Profile
-
-Suggested structure:
-
-- ProfileHeader
-- ProfileAvatar
-- ProfileDetailsForm
-- PasswordUpdateForm
-- LearningPreferences
-
-This page often combines display and edit states, so keep sections separate.
-
-## Routing Structure
-
-Recommended routes:
-
-```text
-/
-/signup
-/signin
-/dashboard
-/courses
-/courses/:courseId
-/lessons/:lessonId
-/assignments/:assignmentId
-/progress
-/discussions
-/notifications
-/profile
-```
-
-Why this route structure works:
-
-- it mirrors the UI/UX page list clearly
-- it keeps LMS navigation predictable
-- it supports dynamic pages such as specific courses and lessons
-
-## State Management Guidance
-
-The project does not need a complex global store at the start.
-
-Use `useState` and `useEffect` for page-level state.
-
-Use Context API for:
-
-- authentication state
-- current user data
-- notification count if shared globally
-
-Avoid storing everything globally. Too much global state makes the app harder to debug and maintain.
-
-## API Integration Structure
-
-The frontend should isolate backend requests inside service files.
-
-Example responsibilities:
-
-- `authService.js` handles login, signup, logout
-- `courseService.js` handles course listing and course details
-- `lessonService.js` handles lesson content retrieval
-- `assignmentService.js` handles assignment submission
-- `profileService.js` handles profile updates
-
-This means page components do not call raw endpoints directly. They call service functions.
-
-That pattern keeps code cleaner and easier to test.
+- route in `src/app/learn/[courseId]/[lessonId]/page.js`
+- reusable lesson navigation and lesson display components in `src/features/video-learning/`
+- supporting APIs in lesson and progress services
 
 ## Styling Guidance
 
-The best styling choice for this team is CSS Modules.
+CSS Modules are still a strong choice for this team.
 
-Why:
+Why they still work well in Next.js:
 
-- easier for developers coming from plain CSS
-- styles stay close to components
-- avoids class name collision
-- keeps large projects more maintainable than one global stylesheet
+- familiar for developers coming from HTML and CSS
+- scoped by default
+- easy to pair with reusable components
+- good for multi-developer collaboration
 
-Recommended rule:
+Recommended styling rules:
 
-- use `globals.css` only for reset, fonts, body defaults, and utility variables
-- keep all page or component styling inside `.module.css` files
+- keep global styling in `src/app/globals.css` and shared style files
+- keep component-specific styling in `.module.css` files
+- avoid large monolithic CSS files
 
-## Performance Tips
+## Performance Guidance in Next.js
 
-Even early in development, the team should follow performance-friendly habits.
+The team should take advantage of Next.js strengths.
 
-- Lazy load route pages when the app grows
-- Keep components focused and small
-- Do not duplicate large blocks of UI code
-- Optimize images before adding them
-- Avoid unnecessary global state
-- Reuse layout and feature components
+Recommended habits:
 
-## HTML to React Migration Tips
+- prefer server components by default
+- keep client components focused
+- avoid unnecessary client-side state
+- keep large route pages split into smaller sections
+- optimize images and assets
+- fetch data at the route or feature level where appropriate
 
-When converting old HTML/CSS pages:
+## Beginner-Friendly Working Rules for Interns and Junior Developers
 
-1. Copy the page into a React component file
-2. Fix HTML to JSX syntax
-3. Split large sections into smaller components
-4. Move styles into CSS Modules
-5. Add props where data will change
-6. Connect API data after the UI structure is stable
+To keep the codebase understandable:
 
-Avoid this mistake:
+- page route files should stay simple
+- business logic should not be hidden inside giant UI files
+- components should do one job each
+- shared UI belongs in `components/ui`
+- feature-specific logic belongs in `features/`
+- API calls belong in `services/`
 
-Do not move an entire full HTML page into one React file and leave it there. That only recreates static development inside React and defeats the purpose of component-based architecture.
+Simple mental model:
+
+- `app/` means route entry
+- `components/` means reusable UI
+- `features/` means product logic by domain
+- `services/` means backend communication
+- `utils/` means helpers
 
 ## Weekly Team Process
 
-To keep four developers aligned, use a simple weekly workflow.
-
 ### Monday
 
-- confirm priorities
-- assign issues
-- confirm branch ownership
+- confirm sprint priorities
+- assign feature ownership
+- confirm branch names and shared-file coordination
 
 ### Daily
 
-- each developer shares progress
-- blockers are raised early
-- shared files are coordinated before edits
+- share blockers early
+- coordinate edits to shared layouts and UI primitives
+- keep pull requests small when possible
 
 ### Before each merge
 
 - test locally
-- check responsiveness
-- review design consistency
-- request teammate review
+- verify route behavior
+- verify responsive layout
+- review component reuse
+- request review from a teammate
 
 ### End of week
 
 - merge stable work into `develop`
-- validate in `staging`
-- review progress against milestones
+- validate integrated flows in `staging`
+- prepare `main` only from release-ready tested work
 
 ## Final Recommendations for the Frontend Team
 
-- Keep page files small by extracting components early
-- Keep API logic out of page components
-- Keep styles close to components
-- Use GitHub branches and PRs carefully
-- Build from shared layouts and reusable components first
-- Match UI/UX designs, but build them in a way that supports growth
+- treat `src/app` as the routing and layout layer
+- keep reusable UI outside route folders
+- keep business logic grouped by domain in `src/features`
+- use server components first and client components only when necessary
+- keep API code in `src/services`
+- preserve useful parts of the original React project during migration
+- optimize for team collaboration, not just speed of initial implementation
 
-If the team follows this structure from the start, the LMS frontend will be easier to scale, easier to review, and safer for four developers to build together.
+If the team follows this updated structure, the TalentFlow frontend will be easier to scale, easier to review, and much better suited for a multi-developer production workflow in Next.js.
