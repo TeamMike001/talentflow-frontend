@@ -1,4 +1,4 @@
-// File: C:\Users\IBRAHIM IBNAFX\Desktop\talentflow\app\forgot-password\page.js
+// File: C:\Users\IBRAHIM IBNAFX\Desktop\DesktopTalentflow\app\forgot-password\page.js
 import * as entry from '../../../../app/forgot-password/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

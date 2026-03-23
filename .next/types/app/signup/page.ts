@@ -1,4 +1,4 @@
-// File: C:\Users\IBRAHIM IBNAFX\Desktop\talentflow\app\signup\page.js
+// File: C:\Users\IBRAHIM IBNAFX\Desktop\DesktopTalentflow\app\signup\page.js
 import * as entry from '../../../../app/signup/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -23,36 +23,25 @@ const tutors = [
 
 export default function Tutors() {
   return (
-    <section className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <p className="text-primary font-semibold text-sm mb-2 text-[22px]">Tutors</p>
-          <h2 className="text-2xl lg:text-3xl font-extrabold text-gray-900 mb-3">Meet the Heroes</h2>
-          <p className="text-gray-500 text-sm max-w-lg mx-auto">
+    <section className="py-10 bg-white">
+      <div className="px-5">
+        <div className="text-center mb-8">
+          <p className="text-primary font-semibold text-sm mb-2">Tutors</p>
+          <h2 className="text-xl font-extrabold text-gray-900 mb-2">Meet the Heroes</h2>
+          <p className="text-gray-500 text-xs px-2">
             On TalentFlow Instructors from all over the world instruct millions of students.
             We offer the knowledge and abilities.
           </p>
         </div>
 
-        {/* Tutor Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-4">
           {tutors.map((tutor) => (
-            <div
-              key={tutor.name}
-              className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 group"
-            >
-              {/* Photo */}
-              <div className="h-48 overflow-hidden bg-gray-100">
-                <img
-                  src={tutor.image}
-                  alt={tutor.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+            <div key={tutor.name} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+              <div className="h-50 overflow-hidden bg-gray-100">
+                <img src={tutor.image} alt={tutor.name} className="w-full h-full object-cover" />
               </div>
-              {/* Info */}
-              <div className="p-4">
-                <h3 className="font-bold text-primary text-sm mb-1">{tutor.name}</h3>
+              <div className="p-3">
+                <h3 className="font-bold text-primary text-xs mb-0.5">{tutor.name}</h3>
                 <p className="text-gray-400 text-xs leading-relaxed">{tutor.role}</p>
               </div>
             </div>

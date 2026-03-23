@@ -11,10 +11,25 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/home/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/page.js"
+    ],
+    "/courses/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/courses/page.js"
+    ],
     "/about/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/about/page.js"
+    ],
+    "/signup/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/signup/page.js"
     ],
     "/contact/page": [
       "static/chunks/webpack.js",
@@ -31,16 +46,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/forgot-password/page.js"
     ],
-    "/signup/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/signup/page.js"
-    ],
-    "/courses/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/courses/page.js"
-    ],
     "/verify-code/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -50,6 +55,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/set-password/page.js"
+    ],
+    "/password-success/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/password-success/page.js"
     ]
   }
 }
