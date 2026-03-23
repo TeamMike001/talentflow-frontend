@@ -1,12 +1,7 @@
 {
-  "/forgot-password/page": "app/forgot-password/page.js",
   "/verify-code/page": "app/verify-code/page.js",
+  "/signin/page": "app/signin/page.js",
   "/set-password/page": "app/set-password/page.js",
   "/password-success/page": "app/password-success/page.js",
-  "/signin/page": "app/signin/page.js",
-  "/signup/page": "app/signup/page.js",
-  "/home/page": "app/home/page.js",
-  "/page": "app/page.js",
-  "/contact/page": "app/contact/page.js",
-  "/about/page": "app/about/page.js"
+  "/page": "app/page.js"
 }
