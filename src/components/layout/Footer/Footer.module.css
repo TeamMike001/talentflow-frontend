@@ -1,0 +1,156 @@
+/* ─── Footer wrapper ────────────────────────────────────────── */
+.footer {
+  background-color: #0a0a0a;
+  color: #ffffff;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 60px 80px 32px;
+}
+
+/* ─── Top Section ───────────────────────────────────────────── */
+.topSection {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 48px;
+}
+
+/* ─── Brand Column ──────────────────────────────────────────── */
+.brandColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoText {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.tagline {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  line-height: 1.6;
+  max-width: 260px;
+  margin: 0;
+}
+
+/* ─── Link Columns ──────────────────────────────────────────── */
+.linkColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.columnHeading {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.linkList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.linkList li a {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.linkList li a:hover {
+  color: #ffffff;
+}
+
+/* ─── Divider ───────────────────────────────────────────────── */
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: #1f2937;
+  margin-bottom: 28px;
+}
+
+/* ─── Bottom Section ────────────────────────────────────────── */
+.bottomSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.copyright {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ─── Social Icons ──────────────────────────────────────────── */
+.socialIcons {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.iconLink {
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.iconLink:hover {
+  color: #ffffff;
+}
+
+/* ─── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .footer {
+    padding: 48px 40px 28px;
+  }
+
+  .topSection {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+  }
+
+  .brandColumn {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer {
+    padding: 40px 24px 24px;
+  }
+
+  .topSection {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+
+  .brandColumn {
+    grid-column: span 2;
+  }
+
+  .bottomSection {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+}
