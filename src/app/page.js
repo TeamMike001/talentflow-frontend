@@ -1,23 +1,27 @@
-import Link from "next/link";
-import SiteHeader from "@/components/layout/SiteHeader";
-import SiteShell from "@/components/layout/SiteShell";
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/Hero';
+import Stats from '@/components/Stats';
+import Features from '@/components/Features';
+import PopularCourses from '@/components/PopularCourses';
+import Tutors from '@/components/Tutors';
+import Testimonials from '@/components/Testimonials';
+import Blog from '@/components/Blog';
+import CTA from '@/components/CTA';
+import Footer from '@/components/Footer';
 
-export default function HomePage() {
+export default function Home() {
   return (
-    <>
-      <SiteHeader />
-      <SiteShell
-        title="TalentFlow Learning Platform"
-        description="Next.js App Router scaffold for a multi-role LMS frontend."
-      >
-        <div className="tf-grid">
-          <Link className="tf-card" href="/login">Authentication</Link>
-          <Link className="tf-card" href="/student/dashboard">Student Dashboard</Link>
-          <Link className="tf-card" href="/instructor/dashboard">Instructor Dashboard</Link>
-          <Link className="tf-card" href="/courses">Course Pages</Link>
-          <Link className="tf-card" href="/admin">Admin Interface</Link>
-        </div>
-      </SiteShell>
-    </>
+    <main>
+      <Navbar />
+      <Hero />
+      <Stats />
+      <Features />
+      <PopularCourses />
+      <Tutors />
+      <Testimonials />
+      <Blog />
+      <CTA />
+      <Footer />
+    </main>
   );
 }
