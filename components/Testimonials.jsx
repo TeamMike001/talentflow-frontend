@@ -16,14 +16,14 @@ const testimonials = [
     text: 'TalentFlow completely changed how I learn. The courses are well-structured and the tutors are absolutely incredible.',
     name: 'Sarah Williams',
     role: 'UI Designer, TalentFlow',
-    avatar: '/images/image(4).png',
+    avatar: '/images/Image(4).png',
   },
   {
     id: 3,
     text: 'Best investment I ever made. Within three months of completing the UX course I landed my dream job.',
     name: 'Marcus Johnson',
     role: 'UX Engineer, TalentFlow',
-    avatar: '/images/image(3).png',
+    avatar: '/images/Image(3).png',
   },
 ];
 

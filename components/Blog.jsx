@@ -5,7 +5,7 @@ import { useState } from 'react';
 const blogs = [
   {
     id: 1,
-    image: '/images/image(Replace).png',
+    image: '/images/Image(Replace).png',
     tag: 'Design',
     tagColor: 'bg-blue-50 text-primary',
     title: 'Typography in web design: Enhancing UI/UX web apps',
@@ -13,7 +13,7 @@ const blogs = [
   },
   {
     id: 2,
-    image: 'images/image(Replace)(1).png',
+    image: 'images/Image(Replace)(1).png',
     tag: 'Web',
     tagColor: 'bg-blue-50 text-primary',
     title: 'Responsive design: Cross-device experience',
@@ -21,7 +21,7 @@ const blogs = [
   },
   {
     id: 3,
-    image: 'images/image(Replace)(2).png',
+    image: 'images/Image(Replace)(2).png',
     tag: 'Web',
     tagColor: 'bg-blue-50 text-primary',
     title: 'Web design best practices: Optimizing speed',

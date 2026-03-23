@@ -7,7 +7,7 @@ import Link from 'next/link';
 const courses = [
   {
     id: 1,
-    image: '/images/image.png',
+    image: '/images/Image.png',
     category: 'Design',
     title: 'Figma UI UX Design..',
     description: 'Use Figma to get a job in UI Design, User Interface, User Experience design.',
@@ -19,7 +19,7 @@ const courses = [
   },
   {
     id: 2,
-    image: 'images/image(1).png',
+    image: 'images/Image(1).png',
     category: 'Design',
     title: 'Learn With Shoaib',
     description: 'Design Web Sites and Mobile Apps that Your Users Love and Return to Again.',
@@ -31,7 +31,7 @@ const courses = [
   },
   {
     id: 3,
-    image: '/images/image(2).png',
+    image: '/images/Image(2).png',
     category: 'Design',
     title: 'Building User Interface..',
     description: 'Learn how to apply User Experience (UX) principles to your website designs.',
