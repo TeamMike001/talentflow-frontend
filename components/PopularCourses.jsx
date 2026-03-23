@@ -14,7 +14,7 @@ const courses = [
     rating: 4.3,
     reviews: 120,
     duration: '08 hr 12 mins',
-    instructor: { name: 'Jane Cooper', avatar: '/images/avatar.png', enrolled: 2001 },
+    instructor: { name: 'Jane Cooper', avatar: '/images/Avatar.png', enrolled: 2001 },
     price: '$19.14',
   },
   {
@@ -26,7 +26,7 @@ const courses = [
     rating: 3.9,
     reviews: 32,
     duration: '06 hr 3 mins',
-    instructor: { name: 'Jenny Wilson', avatar: '/images/avatar(1).png', enrolled: 2001 },
+    instructor: { name: 'Jenny Wilson', avatar: '/images/Avatar(1).png', enrolled: 2001 },
     price: '$10.99',
   },
   {
@@ -38,7 +38,7 @@ const courses = [
     rating: 4.2,
     reviews: 200,
     duration: '01 hr 2 mins',
-    instructor: { name: 'Esther Howard', avatar: '/images/avatar(2).png', enrolled: 2001 },
+    instructor: { name: 'Esther Howard', avatar: '/images/Avatar(2).png', enrolled: 2001 },
     price: '$14.98',
   },
   {
