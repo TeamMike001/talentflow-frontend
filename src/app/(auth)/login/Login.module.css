@@ -1,0 +1,197 @@
+.main {
+    display: flex;
+    width: 100%;
+    font-family: 'Poppins', sans-serif, Helvetica, Arial, sans-serif;
+}
+
+
+.left {
+    background-color: #1E6DC6;
+    width: 50%;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px 30px;
+}
+
+.text {
+    text-align: center;
+}
+
+.h1 {
+    font-size: 50px;
+    margin-bottom: 40px;
+}
+
+.text p {
+    font-size: 25px;
+}
+
+.text .bottom {
+    margin-top: 100px;
+    margin-bottom: 40px;
+}
+
+.text button {
+    background-color: #ffffff;
+    color: #1E6DC6;
+    border: 1px solid #1E6DC6;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 12px;
+    width: 18rem;
+}
+
+.text button:hover{
+    background-color: #f0f0f0;
+}
+
+.right {
+    width: 50%;
+    padding: 60px 40px;
+    color: #000000;
+}
+
+.right h2 {
+    font-size: 24px;
+}
+
+.right p, .right input, .right button {
+    font-size: 16px;
+}
+
+.right .info {
+    margin-bottom: 20px;
+}
+
+.right form {
+    display: flex;
+    flex-direction: column;
+}
+
+.right form input {
+    padding: 15px 10px;
+    margin-bottom: 20px;
+    border: 1px solid #1E6DC6;
+    border-radius: 12px;
+}
+
+.right form input::placeholder {
+    color: #777777;
+}
+
+.right form input:focus {
+    outline: none;
+    border: 2px solid #1E6DC6;
+}
+
+.passwordContainer {
+    display: flex;
+    position: relative;
+    align-items: center;
+    width: 100%;
+}
+
+.passwordContainer input {
+    width: 100%;
+}
+
+.passwordContainer .eyeIcon {
+    position: absolute;
+    cursor: pointer;
+    right: 12px;
+    top: 18px;
+    color: #777777;
+    font-size: 18px;
+}
+
+.remContainer{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    margin-top: -20px;
+}
+
+.remBox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.remBox input {
+    accent-color: #777777;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.remBox label {
+    margin-bottom: 0;
+}
+
+.forgotPassword {
+    color: #F59E0B;
+}
+
+.forgotPassword:hover {
+    text-decoration: underline;
+    color: #1E6DC6;
+}
+
+.signIn {
+    background-color: #1E6DC6;
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    cursor: pointer;
+    border-radius: 12px;
+    margin: 15px 0;
+}
+
+.signIn:hover {
+    background-color: #155a9c;
+}
+
+.more {
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.button {
+    background-color: transparent;
+    color: #777777;
+    border: 1px solid #1E6DC6;
+    padding: 15px;
+    cursor: pointer;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.button:hover {
+    background-color: #f0f0f0;
+}
+
+.moreIcon {
+    font-size: 22px;
+}
+
+.google {
+    background: conic-gradient(from -45deg, #ea4335 110deg, #4285f4 90deg 180deg, #34a853 180deg 270deg, #fbbc05 270deg) 73% 55% / 150% 150% no-repeat; 
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+.linkedin {
+    color: #0A66C2;
+}
