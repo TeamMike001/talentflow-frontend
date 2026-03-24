@@ -1,5 +1,10 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/contact/page": "app/contact/page.js",
-  "/about/page": "app/about/page.js"
+  "/(auth)/forgot-password/page": "app/(auth)/forgot-password/page.js",
+  "/(auth)/set-password/page": "app/(auth)/set-password/page.js",
+  "/(auth)/verify-code/page": "app/(auth)/verify-code/page.js",
+  "/courses/page": "app/courses/page.js",
+  "/about/page": "app/about/page.js",
+  "/contact/page": "app/contact/page.js"
 }
