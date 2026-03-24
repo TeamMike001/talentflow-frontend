@@ -55,15 +55,12 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="w-10 h-10 relative">
-              
               {/* Graduation cap SVG logo */}
-             <Link href="/get-started">
-            <img
+              <img
               src="/images/logo.png"
               alt="Logo"
-              className="w-10 h-10 cursor-pointer"
+              className="w-10 h-10"
             />
-          </Link>
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-lg font-800 font-extrabold">
