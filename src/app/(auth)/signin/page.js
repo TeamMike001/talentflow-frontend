@@ -3,17 +3,28 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function SignInPage() {
   const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [form, setForm] = useState({ username: '', email: '', password: '' });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert('Sign in successful! (demo)');
-  };
+  
+  const router = useRouter();
 
+const handleSubmit = (e) => {
+  e.preventDefault();
+  router.push('/student/dashboard'); // ← navigates on submit
+};
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   alert('Sign in successful! (demo)');
+  // };
+
+
+  
   return (
     <main className="min-h-screen flex">
       {/* ── LEFT – Blue Panel ── */}

@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import Navbar from '@/landing_page/Navbar';
 import Footer from '@/landing_page/Footer';
+import Link from 'next/link';
+
 import { Clock, Star, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 
