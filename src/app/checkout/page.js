@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import Navbar from '@/landing_page/Navbar';
+import Footer from '@/landing_page/Footer';
 import Link from 'next/link';
 import { ChevronRight, CreditCard, Check } from 'lucide-react';
 
