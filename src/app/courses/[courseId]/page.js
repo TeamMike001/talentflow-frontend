@@ -1,5 +1,5 @@
 import Link from "next/link";
-import SiteShell from "@/components/layout/SiteShell";
+import SiteShell from "@/src/components/layout/SiteShell";
 
 export default function CourseDetailsPage({ params }) {
   return (

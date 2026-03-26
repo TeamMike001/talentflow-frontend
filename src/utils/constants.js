@@ -1,5 +1,5 @@
 export const ROUTES = {
-  landing: "/",
+  landing: "/home",
   signup: "/signup",
   signin: "/signin",
   dashboard: "/dashboard",
@@ -11,4 +11,11 @@ export const ROUTES = {
   discussions: "/discussions",
   notifications: "/notifications",
   profile: "/profile",
+  bookmarks: "/bookmarks",
+  certifications: "/certifications",
+  assignments: "/assignments",
+  events: "/events",
+  community: "/community",
+  support: "/support",
+  settings: "/settings",
 };

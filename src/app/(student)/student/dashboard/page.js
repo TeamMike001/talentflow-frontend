@@ -1,4 +1,4 @@
-import DashboardSidebar from "@/components/layout/DashboardSidebar";
+import DashboardSidebar from "@/src/components/layout/DashboardSidebar";
 
 export default function StudentDashboardPage() {
   return (

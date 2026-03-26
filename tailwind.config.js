@@ -4,6 +4,7 @@ module.exports = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './landing_page/**/*.{js,ts,jsx,tsx,mdx}',
     './src/**/*.{js,ts,jsx,tsx,mdx}',
+    './course_dashboard_page/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
