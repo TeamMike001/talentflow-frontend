@@ -2,7 +2,7 @@ import { MoveRight } from 'lucide-react';
 
 export default function HeroBanner() {
   return (
-    <section className="relative overflow-hidden rounded-[2.5rem] h-96 p-12 text-white">
+    <section className="relative overflow-hidden rounded-[2.5rem] h-[26rem] p-12 text-white">
       <img 
         src="/images/don-kaveen-F0CTHqaZth0-unsplash-2.png" 
         alt="Hero Background"
