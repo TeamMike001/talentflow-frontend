@@ -2,7 +2,6 @@ import { NavLink } from "react-router-dom";
 import { ROUTES } from "../../../utils/constants";
 
 const links = [
-  ["Home", ROUTES.home],
   ["Dashboard", ROUTES.dashboard],
   ["Courses", ROUTES.courses],
   ["Progress", ROUTES.progress],

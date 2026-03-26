@@ -1,9 +1,5 @@
 import Link from "next/link";
-<<<<<<< Updated upstream
-import SiteShell from "@/components/layout/SiteShell";
-=======
 import SiteShell from "@/src/components/layout/SiteShell";
->>>>>>> Stashed changes
 
 export default function CourseDetailsPage({ params }) {
   return (
