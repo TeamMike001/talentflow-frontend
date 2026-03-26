@@ -31,7 +31,7 @@ export default function Sidebar() {
           <Link href={item.menuLink}>
             <button
               key={item.label}
-              className={`w-full flex items-center gap-3 p-5 rounded-xl text-sm font-medium transition-all ${
+              className={`w-full flex items-center gap-3 p-4 rounded-xl text-sm font-medium transition-all ${
                 item.active 
                   ? 'bg-primary text-white' 
                   : 'text-black hover:bg-gray-50 hover:text-primary'
@@ -47,12 +47,12 @@ export default function Sidebar() {
         <div className="pt-8 opacity-100">
           <p className="px-4 text-sm font-medium text-gray-400 tracking-widest mb-1 mt-6">Tools</p>
           <Link href="#">
-            <button className="w-full flex items-center gap-3 p-5 rounded-xl text-sm font-medium text-black hover:bg-gray-50 hover:text-primary">
+            <button className="w-full flex items-center gap-3 p-4 rounded-xl text-sm font-medium text-black hover:bg-gray-50 hover:text-primary">
               <Headset size={18} /> Support
             </button>
           </Link>
           <Link href="#">
-            <button className="w-full flex items-center gap-3 p-5 rounded-xl text-sm font-medium text-black hover:bg-gray-50 hover:text-primary">
+            <button className="w-full flex items-center gap-3 p-4 rounded-xl text-sm font-medium text-black hover:bg-gray-50 hover:text-primary">
               <Settings size={18} /> Settings
             </button>
           </Link>
