@@ -32,9 +32,9 @@ export default function CheckoutPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 className="text-xl font-extrabold text-gray-900 text-center mb-1">Course</h1>
             <nav className="flex items-center justify-center gap-2 text-xs text-gray-400">
-              <Link href="/" className="hover:text-primary">Home</Link>
+              <Link href="/student/dashboard" className="hover:text-primary">Home</Link>
               <span>/</span>
-              <Link href="/courses" className="hover:text-primary">Course</Link>
+              <Link href="/student/CourseSearch" className="hover:text-primary">Course</Link>
               <span>/</span>
               <span className="text-gray-600">Figma UI UX Design.</span>
             </nav>

@@ -1,7 +1,5 @@
 'use client';
 
-import Navbar from '@/landing_page/Navbar';
-import Footer from '@/landing_page/Footer';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Star, Users, BookOpen, ChevronDown, ChevronRight, Play, Award, Monitor, Infinity, CheckCircle2 } from 'lucide-react';
@@ -9,7 +7,6 @@ import { Star, Users, BookOpen, ChevronDown, ChevronRight, Play, Award, Monitor,
 // Same PublicNavbar used in CourseSearch
 function PublicNavbar() {
   return (
-    
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-10">
@@ -35,6 +32,39 @@ function PublicNavbar() {
   );
 }
 
+function PublicFooter() {
+  return (
+    <footer className="bg-gray-900 text-white mt-16">
+      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-5 gap-8">
+        <div className="col-span-2 md:col-span-1">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center"><span className="text-white text-xs font-black">TF</span></div>
+            <span className="font-extrabold text-sm">Talent<span className="text-primary">Flow</span></span>
+          </div>
+          <p className="text-gray-400 text-xs leading-relaxed mb-4">Top learning experiences that create more talent in the world.</p>
+          <div className="flex gap-2">
+            <input placeholder="Enter your email" className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-primary" />
+            <button className="bg-primary text-white text-xs font-bold px-3 py-2 rounded-lg hover:bg-primary-dark transition-all">Submit</button>
+          </div>
+        </div>
+        {[
+          { title: 'Product', links: ['Overview', 'Features', 'Solutions', 'Tutorials', 'Pricing'] },
+          { title: 'Company', links: ['About us', 'Features', 'News'] },
+          { title: 'Social', links: ['Twitter', 'LinkedIn', 'GitHub', 'Clickup'] },
+          { title: 'Legal', links: ['Terms', 'Privacy', 'Cookies', 'Contact'] },
+        ].map((col) => (
+          <div key={col.title}>
+            <h4 className="font-bold text-sm mb-3">{col.title}</h4>
+            <ul className="space-y-2">{col.links.map((l) => <li key={l}><Link href="#" className="text-gray-400 text-xs hover:text-white transition-colors">{l}</Link></li>)}</ul>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-gray-800 max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <p className="text-gray-500 text-xs">© 2026 Team Mike – UI/UX. All rights reserved.</p>
+      </div>
+    </footer>
+  );
+}
 
 const TABS = ['Overview', 'Curriculum', 'Instructor', 'Review'];
 
@@ -87,7 +117,7 @@ export default function CourseDetail() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <Navbar />
+      <PublicNavbar />
 
       <div className="max-w-7xl mx-auto w-full px-6 py-8 flex-1">
 
@@ -312,7 +342,7 @@ export default function CourseDetail() {
             )}
           </div>
 
-          {/* ── Sticky Enroll Card ──
+          {/* ── Sticky Enroll Card ── */}
           <div className="w-80 flex-shrink-0 sticky top-20">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6">
               <p className="font-extrabold text-gray-900 text-2xl mb-5">$89.99</p>
@@ -339,7 +369,7 @@ export default function CourseDetail() {
                 30-Day Money-Back Guarantee
               </p>
             </div>
-          </div> */}
+          </div>
 
         </div>
 
@@ -357,8 +387,8 @@ export default function CourseDetail() {
         </div>
 
       </div>
-    <Footer />
-      
+
+      <PublicFooter />
     </div>
   );
 }
