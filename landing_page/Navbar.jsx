@@ -72,10 +72,10 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-8">
-            <Link href="/" className="text-gray-700 font-medium hover:text-primary transition-colors text-sm">
+            <Link href="/get-started" className="text-gray-700 font-medium hover:text-primary transition-colors text-sm">
               Home
             </Link>
-
+  
             {/* Courses Dropdown */}
             <div className="relative">
               <button
