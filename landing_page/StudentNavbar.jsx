@@ -85,8 +85,13 @@ export default function StudentNavbar({ title = 'Titus', subtitle = 'Boost your 
                   </li>
                 ))}
               </ul>
-              <div className="px-4 py-2.5 border-t border-gray-100 text-center">
-                <button className="text-primary text-xs font-semibold hover:underline">View all notifications</button>
+                <div className="px-4 py-2.5 border-t border-gray-100 text-center">
+                <Link
+                  href="/student/StudentNotifications"
+                  className="text-primary text-xs font-semibold hover:underline"
+                >
+                  View all notifications
+                </Link>
               </div>
             </div>
           )}
@@ -120,7 +125,7 @@ export default function StudentNavbar({ title = 'Titus', subtitle = 'Boost your 
                 <p className="text-gray-400 text-xs">titus@example.com</p>
               </div>
               <Link
-                href="/student/profile"
+                href="/student/StudentProfile"
                 onClick={() => setDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors"
               >

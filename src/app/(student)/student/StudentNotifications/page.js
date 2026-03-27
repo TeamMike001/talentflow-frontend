@@ -52,17 +52,15 @@ const initialNotifications = [
     iconBg: 'bg-blue-50',
     title: 'Assignment Graded',
     isNew: false,
-    message: 'Your assignment Digistal Marketing has been graded: 80/100',
+    message: 'Your assignment Digital Marketing has been graded: 80/100',
     time: '5 days ago',
     read: true,
   },
 ];
 
-type Tab = 'all' | 'unread' | 'read';
-
 export default function StudentNotifications() {
   const [notifications, setNotifications] = useState(initialNotifications);
-  const [activeTab, setActiveTab] = useState<Tab>('all');
+  const [activeTab, setActiveTab] = useState('all');
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const readCount = notifications.filter((n) => n.read).length;
@@ -76,23 +74,27 @@ export default function StudentNotifications() {
   });
 
   // Mark single as read
-  const markAsRead = (id: number) => {
+  const markAsRead = (id) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true, isNew: false } : n))
+      prev.map((n) =>
+        n.id === id ? { ...n, read: true, isNew: false } : n
+      )
     );
   };
 
   // Delete notification
-  const deleteNotification = (id: number) => {
+  const deleteNotification = (id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   // Mark all as read
   const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true, isNew: false })));
+    setNotifications((prev) =>
+      prev.map((n) => ({ ...n, read: true, isNew: false }))
+    );
   };
 
-  const tabClass = (tab: Tab) =>
+  const tabClass = (tab) =>
     `px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
       activeTab === tab
         ? 'bg-white border border-gray-200 text-gray-900 shadow-sm'
@@ -109,7 +111,7 @@ export default function StudentNotifications() {
         <main className="flex-1 p-6">
           <div className="max-w-3xl mx-auto">
 
-            {/* ── Page Header ── */}
+            {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -129,20 +131,20 @@ export default function StudentNotifications() {
               </button>
             </div>
 
-            {/* ── Tabs ── */}
+            {/* Tabs */}
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-full w-fit mb-6">
               <button onClick={() => setActiveTab('all')} className={tabClass('all')}>
                 All ({totalCount})
               </button>
               <button onClick={() => setActiveTab('unread')} className={tabClass('unread')}>
-                Unread {unreadCount}
+                Unread ({unreadCount})
               </button>
               <button onClick={() => setActiveTab('read')} className={tabClass('read')}>
-                Read {readCount}
+                Read ({readCount})
               </button>
             </div>
 
-            {/* ── Notification List ── */}
+            {/* List */}
             <div className="space-y-3">
               {filtered.length === 0 && (
                 <div className="text-center py-16 text-gray-400">
@@ -156,53 +158,49 @@ export default function StudentNotifications() {
                 return (
                   <div
                     key={notif.id}
-                    className={`bg-white rounded-2xl border p-5 transition-all ${
+                    className={`bg-white rounded-2xl border p-5 ${
                       !notif.read
-                        ? 'border-gray-200 bg-gray-50 shadow-sm'
-                        : 'border-gray-100 shadow-sm'
+                        ? 'border-gray-200 bg-gray-50'
+                        : 'border-gray-100'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4">
-                      {/* Content */}
                       <div className="flex-1">
-                        {/* Title row */}
                         <div className="flex items-center gap-2 mb-2">
                           <Icon size={16} className={notif.iconColor} />
-                          <span className="font-bold text-gray-900 text-sm">{notif.title}</span>
+                          <span className="font-bold text-gray-900 text-sm">
+                            {notif.title}
+                          </span>
                           {notif.isNew && (
-                            <span className="bg-gray-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            <span className="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded-full">
                               New
                             </span>
                           )}
                         </div>
 
-                        {/* Message */}
-                        <p className="text-gray-500 text-sm leading-relaxed mb-3">
+                        <p className="text-gray-500 text-sm mb-3">
                           {notif.message}
                         </p>
 
-                        {/* Actions row */}
                         <div className="flex items-center gap-3">
                           {!notif.read && (
                             <button
                               onClick={() => markAsRead(notif.id)}
-                              className="text-xs text-gray-400 hover:text-primary transition-colors font-medium underline underline-offset-2"
+                              className="text-xs text-gray-400 hover:text-primary underline"
                             >
                               Mark as read
                             </button>
                           )}
                           <button
                             onClick={() => deleteNotification(notif.id)}
-                            className="text-red-400 hover:text-red-600 transition-colors"
-                            title="Delete"
+                            className="text-red-400 hover:text-red-600"
                           >
                             <Trash2 size={14} />
                           </button>
                         </div>
                       </div>
 
-                      {/* Time */}
-                      <span className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0 mt-0.5">
+                      <span className="text-xs text-gray-400">
                         {notif.time}
                       </span>
                     </div>
@@ -217,9 +215,9 @@ export default function StudentNotifications() {
         <footer className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-white text-xs text-gray-400 mt-auto">
           <span>© 2026 Team Mike – UI/UX. All rights reserved.</span>
           <div className="flex items-center gap-5">
-            <Link href="/faqs" className="hover:text-primary transition-colors">FAQs</Link>
-            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-primary transition-colors">Terms & Condition</Link>
+            <Link href="/faqs">FAQs</Link>
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms & Condition</Link>
           </div>
         </footer>
       </div>
