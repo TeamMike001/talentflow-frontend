@@ -20,8 +20,8 @@ export default function Sidebar() {
   return (
     <div className="flex flex-col p-6 bg-white rounded-2xl mt-6">
       {/* Logo */}
-      <div className="flex items-center justify-center px-2 mb-10">
-        <img src="/images/logo.png" className="w-28 h-28"/>
+      <div className="flex items-center justify-center px-2 mb-2">
+        <img src="/images/logo(1).jpg" className="w-48 h-48"/>
       </div>
 
       {/* Main Menu */}
