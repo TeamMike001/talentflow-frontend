@@ -9,7 +9,7 @@ import {
 
 const navItems = [
   { icon: Home, label: 'Home', href: '/student/dashboard' },
-  { icon: User, label: 'Profile', href: '/student/profile' },
+  { icon: User, label: 'Profile', href: '/student/StudentProfile' },
   { icon: BookOpen, label: 'Courses', href: '/student/courses' },
   { icon: Bookmark, label: 'Bookmarks', href: '/student/bookmarks' },
   { icon: Award, label: 'Certifications', href: '/student/certifications' },

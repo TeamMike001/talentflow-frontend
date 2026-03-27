@@ -1,0 +1,39 @@
+'use client';
+
+import { Search, Bell } from 'lucide-react';
+
+export default function InstructorNavbar({ greeting = 'Good Morning', title = 'Dashboard' }) {
+  return (
+    <header className="h-16 bg-white border-b border-gray-100 flex items-center px-6 gap-4 sticky top-0 z-40">
+
+      {/* Title area */}
+      <div className="flex-1">
+        <p className="text-xs text-gray-400 font-medium">{greeting}</p>
+        <h1 className="text-lg font-extrabold text-gray-900 leading-tight">{title}</h1>
+      </div>
+
+      {/* Search */}
+      <div className="relative w-64">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search"
+          className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 outline-none focus:border-primary focus:bg-white transition-all"
+        />
+      </div>
+
+      {/* Bell */}
+      <button className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+        <Bell size={17} className="text-gray-600" />
+        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+      </button>
+
+      {/* Avatar */}
+      <img
+        src="https://randomuser.me/api/portraits/men/32.jpg"
+        alt="Jese Leos"
+        className="w-9 h-9 rounded-full object-cover border-2 border-gray-200 cursor-pointer"
+      />
+    </header>
+  );
+}
