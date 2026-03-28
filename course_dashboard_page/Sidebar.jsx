@@ -26,12 +26,12 @@ export default function Sidebar() {
 
       {/* Main Menu */}
       <nav className="flex-1 space-y-1">
-        <p className="px-4 text-sm font-medium text-gray-400 tracking-widest mb-4">Main Page</p>
+        <p className="px-2 text-sm font-medium text-gray-400 tracking-widest mb-4">Main Page</p>
         {menuItems.map((item) => (
           <Link href={item.menuLink}>
             <button
               key={item.label}
-              className={`w-full flex items-center gap-3 p-4 rounded-xl text-sm font-medium transition-all ${
+              className={`w-full flex items-center gap-3 px-4 pr-6 py-3 mb-4 rounded-xl text-sm font-medium transition-all ${
                 item.active 
                   ? 'bg-primary text-white' 
                   : 'text-black hover:bg-gray-50 hover:text-primary'
@@ -43,16 +43,16 @@ export default function Sidebar() {
           </Link>
         ))}
 
-        {/* Tasks Section */}
+        {/* Tools Section */}
         <div className="pt-8 opacity-100">
-          <p className="px-4 text-sm font-medium text-gray-400 tracking-widest mb-1 mt-6">Tools</p>
+          <p className="px-2 text-sm font-medium text-gray-400 tracking-widest mb-1 mt-6">Tools</p>
           <Link href="#">
-            <button className="w-full flex items-center gap-3 p-4 rounded-xl text-sm font-medium text-black hover:bg-gray-50 hover:text-primary">
+            <button className="w-full flex items-center gap-3 px-4 pr-6 py-3 mb-4 rounded-xl text-sm font-medium text-black hover:bg-gray-50 hover:text-primary">
               <Headset size={18} /> Support
             </button>
           </Link>
           <Link href="#">
-            <button className="w-full flex items-center gap-3 p-4 rounded-xl text-sm font-medium text-black hover:bg-gray-50 hover:text-primary">
+            <button className="w-full flex items-center gap-3 px-4 pr-6 py-3 mb-4 rounded-xl text-sm font-medium text-black hover:bg-gray-50 hover:text-primary">
               <Settings size={18} /> Settings
             </button>
           </Link>

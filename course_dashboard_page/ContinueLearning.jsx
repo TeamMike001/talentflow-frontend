@@ -26,7 +26,7 @@ function ProgressCard({ title, lesson, progress, status, icon: Icon, iconColor, 
           <span>Completion</span>
           <span>{progress}%</span>
         </div>
-        <div className="h-1.5 w-full bg-gray-600 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full bg-gray-300 rounded-full overflow-hidden">
           <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${progress}%` }} />
         </div>
       </div>
