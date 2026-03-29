@@ -30,7 +30,7 @@ export default function Footer() {
               <div className="w-10 h-10 relative">
               {/* Graduation cap SVG logo */}
               <img
-              src="/images/logo.png"
+              src="/images/logo(1).jpg"
               alt="Logo"
               className="w-10 h-10"
             />
