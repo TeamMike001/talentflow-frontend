@@ -13,10 +13,10 @@ export default function Hero() {
               <span className="text-[#F59E0B]">Smarter</span>{' '}
               with
               <br />
-              <span className="text-[#F59E0B]">TalentFlow</span>
+              <span className="text-[#F59E0B]">LearnX</span>
             </h1>
             <p className="text-gray-500 text-base lg:text-lg leading-relaxed max-w-md">
-              All your learning, assignments, and progress in one place.
+              All your learning, assignments, and <br /> progress in one place.
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
               <Link

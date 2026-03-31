@@ -42,7 +42,7 @@ export default function InstructorSidebar() {
           </svg>
         </div>
         <span className="font-extrabold text-gray-900 text-base leading-none">
-          Talent<span className="text-primary">Flow</span>
+          Learn<span className="text-primary">X</span>
         </span>
       </div>
 
