@@ -31,19 +31,15 @@ export default function InstructorSidebar() {
   const isActive = (href) => pathname === href;
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-56 bg-white border-r border-gray-100 flex flex-col z-50">
-
+     <aside className="hidden lg:flex flex-col w-56 bg-white border-r border-gray-100 h-screen fixed left-0 top-0 z-30">
+      
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-gray-100">
-        <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-          {/* cap icon */}
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
-          </svg>
-        </div>
-        <span className="font-extrabold text-gray-900 text-base leading-none">
-          Learn<span className="text-primary">X</span>
-        </span>
+      <div className="p-3 border-b border-gray-100 flex items-center gap-2 justify-center">
+        <img
+          src="/images/logo.png"
+          alt="Logo"
+          className="w-20 h-auto"
+        />
       </div>
 
       {/* Main Nav */}
