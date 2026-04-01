@@ -15,7 +15,7 @@ import Image from 'next/image';
 
 const navItems = [
   { label: 'Dashboard',        href: '/instructor/dashboard',   icon: LayoutDashboard },
-  { label: 'Create New Course', href: '/instructor/create-course', icon: PlusCircle },
+  { label: 'Create New Course', href: '/instructor/createcourse', icon: PlusCircle },
   { label: 'My Courses',       href: '/instructor/InstructorMyCourses',  icon: BookOpen },
   { label: 'Message',          href: '/instructor/InstructorMessage',     icon: MessageCircle,  badge: 3 },
 ];
