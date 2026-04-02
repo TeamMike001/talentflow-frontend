@@ -10,36 +10,40 @@ import {
   Headphones,
   Settings,
   LogOut,
+  X,
 } from 'lucide-react';
-import Image from 'next/image';
 
 const navItems = [
-  { label: 'Dashboard',        href: '/instructor/dashboard',   icon: LayoutDashboard },
-  { label: 'Create New Course', href: '/instructor/createcourse', icon: PlusCircle },
-  { label: 'My Courses',       href: '/instructor/InstructorMyCourses',  icon: BookOpen },
-  { label: 'Message',          href: '/instructor/InstructorMessage',     icon: MessageCircle,  badge: 3 },
+  { label: 'Dashboard',         href: '/instructor/dashboard',           icon: LayoutDashboard },
+  { label: 'Create New Course', href: '/instructor/createcourse',        icon: PlusCircle },
+  { label: 'My Courses',        href: '/instructor/InstructorMyCourses', icon: BookOpen },
+  { label: 'Message',           href: '/instructor/InstructorMessage',   icon: MessageCircle, badge: 3 },
 ];
 
 const toolItems = [
-  { label: 'Support',  href: '/instructor/support',  icon: Headphones },
+  { label: 'Support',  href: '/instructor/support',            icon: Headphones },
   { label: 'Settings', href: '/instructor/InstructorSettings', icon: Settings },
 ];
 
-export default function InstructorSidebar() {
+export default function InstructorSidebar({ isOpen, onClose }) {
   const pathname = usePathname();
-
   const isActive = (href) => pathname === href;
 
-  return (
-     <aside className="hidden lg:flex flex-col w-56 bg-white border-r border-gray-100 h-screen fixed left-0 top-0 z-30">
-      
+  const NavContent = () => (
+    <>
       {/* Logo */}
-      <div className="p-3 border-b border-gray-100 flex items-center gap-2 justify-center">
-        <img
-          src="/images/logo.png"
-          alt="Logo"
-          className="w-20 h-auto"
-        />
+      <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+        <div className="flex items-center gap-2 justify-center flex-1">
+          <img src="/images/logo.png" alt="Logo" className="w-20 h-auto" />
+        </div>
+        {/* Close button — mobile only */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* Main Nav */}
@@ -49,6 +53,7 @@ export default function InstructorSidebar() {
             <li key={href}>
               <Link
                 href={href}
+                onClick={onClose}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   isActive(href)
                     ? 'bg-primary text-white'
@@ -58,7 +63,9 @@ export default function InstructorSidebar() {
                 <Icon size={17} className="flex-shrink-0" />
                 <span className="flex-1">{label}</span>
                 {badge && (
-                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${isActive(href) ? 'bg-white text-primary' : 'bg-primary text-white'}`}>
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                    isActive(href) ? 'bg-white text-primary' : 'bg-primary text-white'
+                  }`}>
                     {badge}
                   </span>
                 )}
@@ -75,6 +82,7 @@ export default function InstructorSidebar() {
               <li key={href}>
                 <Link
                   href={href}
+                  onClick={onClose}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                     isActive(href)
                       ? 'bg-primary text-white'
@@ -100,6 +108,31 @@ export default function InstructorSidebar() {
           Sign-out
         </Link>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Desktop sidebar (lg+) ── */}
+      <aside className="hidden lg:flex flex-col w-56 bg-white border-r border-gray-100 h-screen fixed left-0 top-0 z-30">
+        <NavContent />
+      </aside>
+
+      {/* ── Mobile / tablet drawer (below lg) ── */}
+      {isOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={onClose}
+            aria-hidden="true"
+          />
+          {/* Drawer panel */}
+          <aside className="relative flex flex-col w-64 max-w-[80vw] bg-white h-full shadow-2xl">
+            <NavContent />
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
