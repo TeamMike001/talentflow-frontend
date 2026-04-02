@@ -41,7 +41,7 @@ export default function Features() {
         <div className="text-center mb-12">
           <p className="text-primary font-semibold text-sm mb-4 text-[22px]">Features</p>
           <h2 className="text-2xl lg:text-3xl font-extrabold text-gray-900">
-            Fostering a playful & engaging learning <br />environment
+            Fostering a playful & engaging learning environment
           </h2>
         </div>
 
