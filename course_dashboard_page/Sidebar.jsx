@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { 
   Home, UserIcon, BookOpen, Bookmark, 
   Award, FileText, Calendar, UsersIcon, 
-  Headset, Settings, LogOut, ChevronDown
+  Headset, Settings, LogOut, ChevronDown,
+  X,
 } from 'lucide-react';
 
 const menuItems = [
@@ -16,12 +17,19 @@ const menuItems = [
   { icon: UsersIcon, label: 'Community', active: false, menuLink: '#' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, closeSidebar }) {
   return (
-    <div className="flex flex-col p-6 bg-white rounded-2xl mt-6">
+    <div className={`
+      flex flex-col p-6 bg-white rounded-2xl mt-6 transition-transform duration-300 ease-in-out
+      max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:mt-0 max-lg:z-50 max-lg:h-full max-lg:overflow-scroll max-lg:rounded-none
+      ${isOpen ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-full'}
+    `}>
       {/* Logo */}
-      <div className="flex items-center justify-center px-2 mb-2">
-        <img src="/images/logo(1).jpg" className="w-48 h-48"/>
+      <div className="flex items-center justify-center px-2 mb-2 max-lg:justify-between max-lg:px-0">
+        <img src="/images/logo(1).jpg" className="w-48 h-fit max-lg:w-20" />
+        <button onClick={closeSidebar} className="hidden p-1 max-lg:block">
+          <X size={24} />
+        </button>
       </div>
 
       {/* Main Menu */}
@@ -61,7 +69,7 @@ export default function Sidebar() {
 
       {/* User Profile Footer */}
       <div className="mt-6 pt-6">
-        <div className="flex items-center justify-between p-2 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer gap-5">
+        <div className="flex items-center justify-between p-2 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer gap-6">
           <div className="flex items-center gap-3">
             <img 
               src="/images/Avatar(2).png" 
