@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const GoogleIcon = () => (
@@ -20,13 +20,67 @@ const LinkedInIcon = () => (
   </svg>
 );
 
+/* ── Instructor SVG illustration ── */
+const InstructorIllustration = () => (
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <rect width="52" height="52" rx="14" fill="#EFF6FF"/>
+    <rect x="10" y="12" width="32" height="20" rx="3" fill="#2563EB" opacity="0.15"/>
+    <rect x="10" y="12" width="32" height="20" rx="3" stroke="#2563EB" strokeWidth="1.5"/>
+    <line x1="15" y1="19" x2="29" y2="19" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="15" y1="23" x2="25" y2="23" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+    <line x1="15" y1="27" x2="27" y2="27" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+    <line x1="33" y1="17" x2="37" y2="14" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="26" cy="42" r="4" fill="#2563EB" opacity="0.2"/>
+    <circle cx="26" cy="38" r="3" fill="#2563EB"/>
+    <path d="M19 48c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+/* ── Student SVG illustration ── */
+const StudentIllustration = () => (
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <rect width="52" height="52" rx="14" fill="#F0FDF4"/>
+    <path d="M26 14L38 20L26 26L14 20L26 14Z" fill="#16A34A" opacity="0.8"/>
+    <path d="M18 22V29C18 29 21 33 26 33C31 33 34 29 34 29V22" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="38" y1="20" x2="38" y2="27" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="38" cy="28" r="1.5" fill="#F59E0B"/>
+    <rect x="16" y="36" width="12" height="9" rx="1.5" fill="#16A34A" opacity="0.2" stroke="#16A34A" strokeWidth="1.2"/>
+    <line x1="22" y1="36" x2="22" y2="45" stroke="#16A34A" strokeWidth="1.2"/>
+    <rect x="30" y="35" width="4" height="10" rx="1" transform="rotate(15 30 35)" fill="#F59E0B" opacity="0.8"/>
+  </svg>
+);
+
+const roles = [
+  {
+    id: 'instructor',
+    label: "I'm a Tutor",
+    sublabel: 'Instructor',
+    description: 'Create & manage courses',
+    illustration: <InstructorIllustration />,
+    accent: 'border-primary bg-blue-50',
+    checkColor: 'bg-primary',
+    redirect: '/instructor/create-course',
+  },
+  {
+    id: 'student',
+    label: "I'm a Student",
+    sublabel: 'Learner',
+    description: 'Access & learn courses',
+    illustration: <StudentIllustration />,
+    accent: 'border-green-500 bg-green-50',
+    checkColor: 'bg-green-500',
+    redirect: '/student/dashboard',
+  },
+];
+
 export default function SignUpPage() {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [role, setRole] = useState('instructor'); // 'instructor' | 'student'
+  const [role, setRole] = useState('instructor');
   const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
-
   const router = useRouter();
+
+  const selectedRole = roles.find(r => r.id === role);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -34,12 +88,7 @@ export default function SignUpPage() {
       alert('Passwords do not match!');
       return;
     }
-    // Route to appropriate dashboard after signup
-    if (role === 'instructor') {
-      router.push('/instructor/dashboard');
-    } else {
-      router.push('/student/dashboard');
-    }
+    router.push(selectedRole.redirect);
   };
 
   const inputClass =
@@ -51,8 +100,6 @@ export default function SignUpPage() {
       {/* ── LEFT – Blue Panel ── */}
       <div className="hidden lg:flex lg:w-5/12 bg-primary flex-col items-center justify-between py-16 px-12 text-white text-center">
         <div />
-
-        {/* Center text */}
         <div>
           <h1 className="text-5xl font-bold mb-6 leading-tight">Hey There!</h1>
           <p className="text-xl leading-relaxed text-white/90">Welcome to TalentFlow.</p>
@@ -60,8 +107,6 @@ export default function SignUpPage() {
             You are just one step away to your feed.
           </p>
         </div>
-
-        {/* Bottom CTA */}
         <div className="text-center">
           <p className="text-white/80 text-base mb-4">Already have an account?</p>
           <Link
@@ -74,7 +119,7 @@ export default function SignUpPage() {
       </div>
 
       {/* ── RIGHT – Form Panel ── */}
-      <div className="w-full lg:w-7/12 flex items-center justify-center px-8 py-12 bg-white">
+      <div className="w-full lg:w-7/12 flex items-center justify-center px-8 py-12 bg-white overflow-y-auto">
         <div className="w-full max-w-lg">
 
           {/* Mobile switch */}
@@ -91,34 +136,73 @@ export default function SignUpPage() {
             and keep everything flowing in one place.
           </p>
 
-          {/* ── Role Toggle ── */}
-          <div className="flex rounded-xl border border-blue-200 overflow-hidden mb-6 p-1 bg-white">
-            <button
-              type="button"
-              onClick={() => setRole('instructor')}
-              className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
-                role === 'instructor'
-                  ? 'bg-white text-primary shadow-sm border border-blue-200'
-                  : 'text-white bg-primary'
-              }`}
-            >
-              I&apos;m a Tutor/Instructor
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('student')}
-              className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
-                role === 'student'
-                  ? 'bg-white text-primary shadow-sm border border-blue-200'
-                  : 'text-white bg-primary'
-              }`}
-            >
-              I&apos;m a Student
-            </button>
+          {/* ── ROLE SELECTOR ── */}
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-gray-700 mb-3">I want to join as a:</p>
+            <div className="grid grid-cols-2 gap-3">
+              {roles.map((r) => {
+                const isActive = role === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setRole(r.id)}
+                    className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 text-center group
+                      ${isActive
+                        ? r.accent + ' shadow-md scale-[1.02]'
+                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                  >
+                    {/* Check badge */}
+                    <div className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${
+                      isActive ? r.checkColor + ' opacity-100 scale-100' : 'bg-gray-200 opacity-0 scale-75'
+                    }`}>
+                      <Check size={11} className="text-white" strokeWidth={3} />
+                    </div>
+
+                    {/* Illustration */}
+                    <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100 group-hover:scale-105'}`}>
+                      {r.illustration}
+                    </div>
+
+                    {/* Labels */}
+                    <div>
+                      <p className={`font-extrabold text-sm transition-colors ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
+                        {r.label}
+                      </p>
+                      <p className={`text-xs mt-0.5 font-medium transition-colors ${
+                        isActive
+                          ? r.id === 'instructor' ? 'text-primary' : 'text-green-600'
+                          : 'text-gray-400'
+                      }`}>
+                        {r.description}
+                      </p>
+                    </div>
+
+                    {/* Active bottom bar */}
+                    <div className={`absolute bottom-0 left-4 right-4 h-0.5 rounded-full transition-all duration-300 ${
+                      isActive
+                        ? r.id === 'instructor' ? 'bg-primary opacity-100' : 'bg-green-500 opacity-100'
+                        : 'opacity-0'
+                    }`} />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Confirmation pill */}
+            <div className="mt-3 text-center">
+              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-300 ${
+                role === 'instructor' ? 'bg-blue-50 text-primary' : 'bg-green-50 text-green-600'
+              }`}>
+                <Check size={11} strokeWidth={3} />
+                Registering as: <span className="font-extrabold">{selectedRole?.sublabel}</span>
+              </span>
+            </div>
           </div>
 
+          {/* ── FORM ── */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
             <input
               type="text"
               placeholder="Full Name"
@@ -127,8 +211,6 @@ export default function SignUpPage() {
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
               className={inputClass}
             />
-
-            {/* Email */}
             <input
               type="email"
               placeholder="Email"
@@ -176,27 +258,28 @@ export default function SignUpPage() {
               </button>
             </div>
 
-            {/* Submit */}
+            {/* Submit — colour reflects role */}
             <button
               type="submit"
-              className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all text-sm"
+              className={`w-full py-3.5 text-white font-bold rounded-xl transition-all text-sm shadow-md hover:shadow-lg ${
+                role === 'student'
+                  ? 'bg-green-500 hover:bg-green-600'
+                  : 'bg-primary hover:bg-primary-dark'
+              }`}
             >
-              Sign up
+              Sign up as {selectedRole?.sublabel}
             </button>
           </form>
 
           {/* Divider */}
           <p className="text-center text-gray-400 text-sm my-5">Or use social media to sign up</p>
 
-          {/* Social Buttons */}
           <div className="space-y-3">
             <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-              <GoogleIcon />
-              Sign up with Google
+              <GoogleIcon /> Sign up with Google
             </button>
             <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-              <LinkedInIcon />
-              Sign up with Linkedin
+              <LinkedInIcon /> Sign up with LinkedIn
             </button>
           </div>
         </div>

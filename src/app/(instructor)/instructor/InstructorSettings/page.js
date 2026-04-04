@@ -4,9 +4,13 @@ import InstructorSidebar from '@/landing_page/InstructorSidebar';
 import InstructorNavbar from '@/landing_page/InstructorNavbar';
 import InstructorFooter from '@/landing_page/InstructorFooter';
 import { useState, useRef } from 'react';
-import { Upload, Eye, EyeOff, Globe, Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
+import {
+  Upload, Eye, EyeOff, Globe, Facebook, Instagram, Linkedin, Youtube,
+  Menu, X, BookOpen, BarChart2, Settings, Bell, LogOut, Home, ChevronDown
+} from 'lucide-react';
 
-// ── Reusable input ────────────────────────────────────────────────────────────
+
+// ── Reusable Field ────────────────────────────────────────────────────────────
 function Field({ label, children }) {
   return (
     <div>
@@ -22,7 +26,7 @@ function TextInput({ placeholder, defaultValue = '', type = 'text', className = 
       type={type}
       placeholder={placeholder}
       defaultValue={defaultValue}
-      className={`w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 outline-none focus:border-primary transition-all placeholder:text-gray-400 ${className}`}
+      className={`w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-400 transition-all placeholder:text-gray-400 ${className}`}
       {...rest}
     />
   );
@@ -36,17 +40,6 @@ function SocialInput({ icon: Icon, placeholder, color = 'text-gray-400' }) {
     </div>
   );
 }
-
-// ── Notification items ────────────────────────────────────────────────────────
-const notifications = [
-  { label: 'I want to know who buy my course.',                  defaultChecked: false },
-  { label: 'I want to know who write a review on my course.',    defaultChecked: true  },
-  { label: 'I want to know who commented on my lecture.',        defaultChecked: false },
-  { label: 'I want to know who download my lecture notes.',      defaultChecked: true  },
-  { label: 'I want to know who replied on my comment.',          defaultChecked: true  },
-  { label: 'I want to know daily how many people visited my profile.', defaultChecked: false },
-  { label: 'I want to know who download my lecture attach file.', defaultChecked: true },
-];
 
 function PasswordField({ label, placeholder }) {
   const [show, setShow] = useState(false);
@@ -66,7 +59,24 @@ function PasswordField({ label, placeholder }) {
   );
 }
 
+const notifications = [
+  { label: 'I want to know who buy my course.',                        defaultChecked: false },
+  { label: 'I want to know who write a review on my course.',          defaultChecked: true  },
+  { label: 'I want to know who commented on my lecture.',              defaultChecked: false },
+  { label: 'I want to know who download my lecture notes.',            defaultChecked: true  },
+  { label: 'I want to know who replied on my comment.',                defaultChecked: true  },
+  { label: 'I want to know daily how many people visited my profile.', defaultChecked: false },
+  { label: 'I want to know who download my lecture attach file.',      defaultChecked: true  },
+];
+
+const SaveButton = () => (
+  <button className="bg-blue-600 text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-all w-full sm:w-auto">
+    Save Changes
+  </button>
+);
+
 export default function InstructorSettings() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bioCount, setBioCount] = useState(0);
   const fileRef = useRef(null);
   const [photoPreview, setPhotoPreview] = useState('https://randomuser.me/api/portraits/men/32.jpg');
@@ -78,23 +88,23 @@ export default function InstructorSettings() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <InstructorSidebar />
+      <InstructorSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 ml-56 flex flex-col min-h-screen">
-        <InstructorNavbar greeting="Good Morning" title="Settings" />
+      <div className="flex-1 lg:ml-56 flex flex-col min-h-screen">
+        <InstructorNavbar title="Settings" onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="flex-1 p-6 space-y-5">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5">
 
           {/* ── Account Settings ── */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div className="flex gap-8">
-              {/* Form fields */}
-              <div className="flex-1 space-y-5">
-                <h2 className="font-extrabold text-gray-900 text-lg">Account Settings</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+            <h2 className="font-extrabold text-gray-900 text-lg mb-5">Account Settings</h2>
 
-                {/* Full name row */}
+            {/* Stack vertically on mobile, side-by-side on md+ */}
+            <div className="flex flex-col-reverse md:flex-row gap-6 md:gap-8">
+              {/* Form fields */}
+              <div className="flex-1 space-y-4 sm:space-y-5">
                 <Field label="Full name">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <TextInput placeholder="First name" />
                     <TextInput placeholder="Last name" />
                   </div>
@@ -106,8 +116,8 @@ export default function InstructorSettings() {
 
                 <Field label="Phone Number">
                   <div className="flex gap-2">
-                    <div className="relative w-20">
-                      <select className="w-full h-full border border-gray-200 rounded-xl px-2 py-2.5 text-sm text-gray-700 bg-white outline-none focus:border-primary appearance-none pr-5">
+                    <div className="relative w-20 flex-shrink-0">
+                      <select className="w-full h-full border border-gray-200 rounded-xl px-2 py-2.5 text-sm text-gray-700 bg-white outline-none focus:border-blue-400 appearance-none pr-5">
                         <option>+1</option>
                         <option>+44</option>
                         <option>+234</option>
@@ -134,23 +144,21 @@ export default function InstructorSettings() {
                   <textarea
                     placeholder="Your title, profession or small biography"
                     rows={4}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 outline-none focus:border-primary transition-all placeholder:text-gray-400 resize-none"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 outline-none focus:border-blue-400 transition-all placeholder:text-gray-400 resize-none"
                   />
                 </Field>
 
-                <button className="bg-primary text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-primary-dark transition-all">
-                  Save Changes
-                </button>
+                <SaveButton />
               </div>
 
-              {/* Photo upload */}
-              <div className="w-48 flex-shrink-0">
-                <div className="rounded-xl overflow-hidden bg-gray-100 mb-2 aspect-square">
+              {/* Photo upload — centered on mobile, right-aligned on md+ */}
+              <div className="w-full md:w-44 flex-shrink-0 flex flex-col items-center md:items-stretch">
+                <div className="w-32 h-32 md:w-full md:aspect-square rounded-xl overflow-hidden bg-gray-100 mb-2">
                   <img src={photoPreview} alt="Profile" className="w-full h-full object-cover" />
                 </div>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-1.5 border border-gray-200 text-gray-600 text-xs font-semibold py-2 rounded-xl hover:border-primary hover:text-primary transition-all"
+                  className="flex items-center justify-center gap-1.5 border border-gray-200 text-gray-600 text-xs font-semibold py-2 rounded-xl hover:border-blue-400 hover:text-blue-600 transition-all w-32 md:w-full"
                 >
                   <Upload size={13} /> Upload Photo
                 </button>
@@ -163,7 +171,7 @@ export default function InstructorSettings() {
           </div>
 
           {/* ── Social Profile ── */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 space-y-4 sm:space-y-5">
             <h2 className="font-extrabold text-gray-900 text-lg">Social Profile</h2>
 
             <Field label="Personal Website">
@@ -173,7 +181,8 @@ export default function InstructorSettings() {
               </div>
             </Field>
 
-            <div className="grid grid-cols-3 gap-4">
+            {/* 1 col on mobile, 2 on sm, 3 on lg */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <Field label="Facebook">
                 <SocialInput icon={Facebook} placeholder="Username" color="text-blue-600" />
               </Field>
@@ -183,9 +192,8 @@ export default function InstructorSettings() {
               <Field label="Linkedin">
                 <SocialInput icon={Linkedin} placeholder="Username" color="text-blue-700" />
               </Field>
-              <Field label="Twitter">
+              <Field label="Twitter / X">
                 <div className="relative">
-                  {/* X icon */}
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-sm text-gray-700">𝕏</span>
                   <TextInput placeholder="Username" className="pl-9" />
                 </div>
@@ -201,43 +209,38 @@ export default function InstructorSettings() {
               </Field>
             </div>
 
-            <button className="bg-primary text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-primary-dark transition-all">
-              Save Changes
-            </button>
+            <SaveButton />
           </div>
 
           {/* ── Notifications + Change Password ── */}
-          <div className="grid grid-cols-2 gap-5">
+          {/* Stack on mobile, side-by-side on lg */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
 
             {/* Notifications */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 space-y-4">
               <h2 className="font-extrabold text-gray-900 text-lg">Notifications</h2>
               <div className="space-y-3">
                 {notifications.map((n) => (
-                  <label key={n.label} className="flex items-start gap-3 cursor-pointer">
+                  <label key={n.label} className="flex items-start gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
                       defaultChecked={n.defaultChecked}
-                      className="mt-0.5 w-4 h-4 accent-primary flex-shrink-0"
+                      className="mt-0.5 w-4 h-4 accent-blue-600 flex-shrink-0 cursor-pointer"
                     />
-                    <span className="text-sm text-gray-600 leading-snug">{n.label}</span>
+                    <span className="text-sm text-gray-600 leading-snug group-hover:text-gray-800 transition-colors">{n.label}</span>
                   </label>
                 ))}
               </div>
-              <button className="bg-primary text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-primary-dark transition-all mt-2">
-                Save Changes
-              </button>
+              <SaveButton />
             </div>
 
             {/* Change Password */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 space-y-4">
               <h2 className="font-extrabold text-gray-900 text-lg">Change password</h2>
               <PasswordField label="Current Password" placeholder="Password" />
               <PasswordField label="New Password" placeholder="Password" />
               <PasswordField label="Confirm Password" placeholder="Confirm new password" />
-              <button className="bg-primary text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-primary-dark transition-all">
-                Save Changes
-              </button>
+              <SaveButton />
             </div>
 
           </div>

@@ -3,20 +3,23 @@
 import InstructorSidebar from '@/landing_page/InstructorSidebar';
 import InstructorNavbar from '@/landing_page/InstructorNavbar';
 import InstructorFooter from '@/landing_page/InstructorFooter';
-import { useState } from 'react';
-import { Search, Plus, MoreHorizontal, Send, Edit3 } from 'lucide-react';
 
+import { useState } from 'react';
+import { Search, Plus, MoreHorizontal, Send, Edit3, Menu, X, BookOpen, BarChart2, Settings, Bell, LogOut, Home, ArrowLeft } from 'lucide-react';
+
+
+// ── Data ─────────────────────────────────────────────────────────────────────
 const contacts = [
-  { id: 1, name: 'Jane Cooper',        avatar: 'https://randomuser.me/api/portraits/women/44.jpg', lastMsg: 'I only have a small doubt about...',  time: 'just now',  online: true,  active: true,  unread: false },
-  { id: 2, name: 'Jenny Wilson',       avatar: 'https://randomuser.me/api/portraits/women/50.jpg', lastMsg: 'Thank you so much, sir',               time: '08.21',     online: false, active: false, unread: true },
-  { id: 3, name: 'Marvin McKinney',    avatar: 'https://randomuser.me/api/portraits/men/51.jpg',   lastMsg: "You're Welcome",                       time: 'Yesterday', online: false, active: false, unread: true },
-  { id: 4, name: 'Eleanor Pena',       avatar: 'https://randomuser.me/api/portraits/women/52.jpg', lastMsg: 'Thank you so much, sir',               time: 'Yesterday', online: false, active: false, unread: false },
-  { id: 5, name: 'Ronald Richards',    avatar: 'https://randomuser.me/api/portraits/men/53.jpg',   lastMsg: "Sorry, I can't help you",              time: 'Monday',    online: false, active: false, unread: false },
-  { id: 6, name: 'Kathryn Murphy',     avatar: 'https://randomuser.me/api/portraits/women/54.jpg', lastMsg: 'new message',                          time: '2 m',       online: false, active: false, unread: false },
-  { id: 7, name: 'Jacob Jones',        avatar: 'https://randomuser.me/api/portraits/men/55.jpg',   lastMsg: 'Thank you so much, sir',               time: '6 m',       online: false, active: false, unread: false },
-  { id: 8, name: 'Cameron Williamson', avatar: 'https://randomuser.me/api/portraits/men/56.jpg',   lastMsg: "It's okay, no problem, I will...",     time: '6 m',       online: false, active: false, unread: false },
-  { id: 9, name: 'Arlene McCoy',       avatar: 'https://randomuser.me/api/portraits/women/57.jpg', lastMsg: 'Thank you so much, sir',               time: '9 m',       online: false, active: false, unread: false },
-  { id: 10, name: 'Dianne Russell',    avatar: 'https://randomuser.me/api/portraits/women/58.jpg', lastMsg: "You're Welcome",                       time: '9 m',       online: false, active: false, unread: false },
+  { id: 1, name: 'Jane Cooper',        avatar: 'https://randomuser.me/api/portraits/women/44.jpg', lastMsg: 'I only have a small doubt about...',  time: 'just now',  online: true,  unread: false },
+  { id: 2, name: 'Jenny Wilson',       avatar: 'https://randomuser.me/api/portraits/women/50.jpg', lastMsg: 'Thank you so much, sir',               time: '08.21',     online: false, unread: true  },
+  { id: 3, name: 'Marvin McKinney',    avatar: 'https://randomuser.me/api/portraits/men/51.jpg',   lastMsg: "You're Welcome",                       time: 'Yesterday', online: false, unread: true  },
+  { id: 4, name: 'Eleanor Pena',       avatar: 'https://randomuser.me/api/portraits/women/52.jpg', lastMsg: 'Thank you so much, sir',               time: 'Yesterday', online: false, unread: false },
+  { id: 5, name: 'Ronald Richards',    avatar: 'https://randomuser.me/api/portraits/men/53.jpg',   lastMsg: "Sorry, I can't help you",              time: 'Monday',    online: false, unread: false },
+  { id: 6, name: 'Kathryn Murphy',     avatar: 'https://randomuser.me/api/portraits/women/54.jpg', lastMsg: 'new message',                          time: '2 m',       online: false, unread: false },
+  { id: 7, name: 'Jacob Jones',        avatar: 'https://randomuser.me/api/portraits/men/55.jpg',   lastMsg: 'Thank you so much, sir',               time: '6 m',       online: false, unread: false },
+  { id: 8, name: 'Cameron Williamson', avatar: 'https://randomuser.me/api/portraits/men/56.jpg',   lastMsg: "It's okay, no problem, I will...",     time: '6 m',       online: false, unread: false },
+  { id: 9, name: 'Arlene McCoy',       avatar: 'https://randomuser.me/api/portraits/women/57.jpg', lastMsg: 'Thank you so much, sir',               time: '9 m',       online: false, unread: false },
+  { id: 10, name: 'Dianne Russell',    avatar: 'https://randomuser.me/api/portraits/women/58.jpg', lastMsg: "You're Welcome",                       time: '9 m',       online: false, unread: false },
 ];
 
 const initialMessages = [
@@ -28,10 +31,13 @@ const initialMessages = [
 ];
 
 export default function InstructorMessage() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeContact, setActiveContact] = useState(contacts[0]);
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState('');
   const [contactSearch, setContactSearch] = useState('');
+  // Mobile: 'list' | 'chat'
+  const [mobileView, setMobileView] = useState('list');
 
   const sendMessage = () => {
     const text = input.trim();
@@ -40,26 +46,38 @@ export default function InstructorMessage() {
     setInput('');
   };
 
+  const handleSelectContact = (contact) => {
+    setActiveContact(contact);
+    setMobileView('chat');
+  };
+
   const filteredContacts = contacts.filter((c) =>
     c.name.toLowerCase().includes(contactSearch.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <InstructorSidebar />
+      <InstructorSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 ml-56 flex flex-col min-h-screen">
-        <InstructorNavbar greeting="Good Morning" title="Message (2)" />
+      <div className="flex-1 lg:ml-56 flex flex-col min-h-screen">
+        <InstructorNavbar title="Message (2)" onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="flex-1 p-6">
-          <div className="grid grid-cols-5 gap-5 h-full" style={{ minHeight: 560 }}>
+        <main className="flex-1 p-3 sm:p-4 md:p-6">
+          {/* Fixed height container */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex" style={{ height: 'calc(100vh - 180px)', minHeight: 480 }}>
 
-            {/* ── Contact List ── */}
-            <div className="col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+            {/* ── Contact List ──
+                On mobile: full width, hidden when mobileView==='chat'
+                On md+: fixed width column, always visible */}
+            <div className={`
+              flex flex-col border-r border-gray-100
+              ${mobileView === 'chat' ? 'hidden md:flex' : 'flex w-full'}
+              md:w-72 lg:w-80 md:flex-shrink-0
+            `}>
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100">
                 <h2 className="font-extrabold text-gray-900 text-base">Chat</h2>
-                <button className="flex items-center gap-1.5 text-xs font-bold text-primary border border-primary rounded-xl px-3 py-1.5 hover:bg-primary hover:text-white transition-all">
+                <button className="flex items-center gap-1.5 text-xs font-bold text-blue-600 border border-blue-600 rounded-xl px-3 py-1.5 hover:bg-blue-600 hover:text-white transition-all">
                   <Plus size={13} /> Compose
                 </button>
               </div>
@@ -73,7 +91,7 @@ export default function InstructorMessage() {
                     placeholder="Search"
                     value={contactSearch}
                     onChange={(e) => setContactSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs text-gray-700 outline-none focus:border-primary transition-all"
+                    className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs text-gray-700 outline-none focus:border-blue-400 transition-all"
                   />
                 </div>
               </div>
@@ -83,12 +101,11 @@ export default function InstructorMessage() {
                 {filteredContacts.map((contact) => (
                   <button
                     key={contact.id}
-                    onClick={() => setActiveContact(contact)}
+                    onClick={() => handleSelectContact(contact)}
                     className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left ${
                       activeContact.id === contact.id ? 'bg-blue-50' : 'hover:bg-gray-50'
                     }`}
                   >
-                    {/* Avatar + online dot */}
                     <div className="relative flex-shrink-0">
                       <img src={contact.avatar} alt={contact.name} className="w-9 h-9 rounded-full object-cover" />
                       {contact.online && (
@@ -100,25 +117,35 @@ export default function InstructorMessage() {
                         <span className="font-bold text-gray-900 text-xs">{contact.name}</span>
                         <span className="text-[10px] text-gray-400">{contact.time}</span>
                       </div>
-                      <p className={`text-[11px] truncate ${contact.unread ? 'text-primary font-semibold' : 'text-gray-400'}`}>
+                      <p className={`text-[11px] truncate ${contact.unread ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
                         {contact.lastMsg}
                       </p>
                     </div>
-                    {contact.unread && (
-                      <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
-                    )}
+                    {contact.unread && <span className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0" />}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* ── Chat Window ── */}
-            <div className="col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+            {/* ── Chat Window ──
+                On mobile: full width, hidden when mobileView==='list'
+                On md+: takes remaining space, always visible */}
+            <div className={`
+              flex-col flex-1 overflow-hidden
+              ${mobileView === 'list' ? 'hidden md:flex' : 'flex w-full'}
+            `}>
               {/* Chat header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-gray-100 flex-shrink-0">
                 <div className="flex items-center gap-3">
+                  {/* Back button on mobile */}
+                  <button
+                    onClick={() => setMobileView('list')}
+                    className="md:hidden text-gray-400 hover:text-blue-600 transition-colors mr-1"
+                  >
+                    <ArrowLeft size={18} />
+                  </button>
                   <div className="relative">
-                    <img src={activeContact.avatar} alt={activeContact.name} className="w-10 h-10 rounded-full object-cover" />
+                    <img src={activeContact.avatar} alt={activeContact.name} className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover" />
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
                   </div>
                   <div>
@@ -132,8 +159,7 @@ export default function InstructorMessage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-                {/* Date divider */}
+              <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-3">
                 <div className="flex justify-center">
                   <span className="bg-gray-100 text-gray-500 text-[11px] font-medium px-3 py-1 rounded-full">Today</span>
                 </div>
@@ -149,13 +175,11 @@ export default function InstructorMessage() {
                       {msg.sender === 'student' && (
                         <img src={activeContact.avatar} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0 mb-0.5" />
                       )}
-                      <div
-                        className={`max-w-xs px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                          msg.sender === 'me'
-                            ? 'bg-primary text-white rounded-br-sm'
-                            : 'bg-gray-100 text-gray-800 rounded-bl-sm'
-                        }`}
-                      >
+                      <div className={`max-w-[75%] sm:max-w-xs md:max-w-sm px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                        msg.sender === 'me'
+                          ? 'bg-blue-600 text-white rounded-br-sm'
+                          : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+                      }`}>
                         {msg.text}
                       </div>
                     </div>
@@ -164,8 +188,8 @@ export default function InstructorMessage() {
               </div>
 
               {/* Input */}
-              <div className="flex items-center gap-3 px-5 py-4 border-t border-gray-100">
-                <button className="text-gray-400 hover:text-primary transition-colors flex-shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-3 sm:py-4 border-t border-gray-100 flex-shrink-0">
+                <button className="text-gray-400 hover:text-blue-600 transition-colors flex-shrink-0 hidden sm:block">
                   <Edit3 size={18} />
                 </button>
                 <input
@@ -174,13 +198,14 @@ export default function InstructorMessage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                  className="flex-1 text-sm text-gray-700 outline-none placeholder:text-gray-400"
+                  className="flex-1 text-sm text-gray-700 outline-none placeholder:text-gray-400 min-w-0"
                 />
                 <button
                   onClick={sendMessage}
-                  className="flex items-center gap-2 bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-primary-dark transition-all"
+                  className="flex items-center gap-1.5 sm:gap-2 bg-blue-600 text-white text-xs sm:text-sm font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl hover:bg-blue-700 transition-all flex-shrink-0"
                 >
-                  Send <Send size={14} />
+                  <span className="hidden sm:inline">Send</span>
+                  <Send size={14} />
                 </button>
               </div>
             </div>

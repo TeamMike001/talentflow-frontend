@@ -113,26 +113,31 @@ export default function InstructorSidebar({ isOpen, onClose }) {
 
   return (
     <>
-      {/* ── Desktop sidebar (lg+) ── */}
+      {/* ── Desktop sidebar (lg+): always visible ── */}
       <aside className="hidden lg:flex flex-col w-56 bg-white border-r border-gray-100 h-screen fixed left-0 top-0 z-30">
         <NavContent />
       </aside>
 
       {/* ── Mobile / tablet drawer (below lg) ── */}
-      {isOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={onClose}
-            aria-hidden="true"
-          />
-          {/* Drawer panel */}
-          <aside className="relative flex flex-col w-64 max-w-[80vw] bg-white h-full shadow-2xl">
-            <NavContent />
-          </aside>
-        </div>
-      )}
+      <div className="lg:hidden">
+        {/* Backdrop — fades in when open */}
+        <div
+          onClick={onClose}
+          aria-hidden="true"
+          className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${
+            isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+        />
+
+        {/* Drawer panel — slides in from the left */}
+        <aside
+          className={`fixed top-0 left-0 h-full w-64 max-w-[80vw] bg-white shadow-2xl z-50 flex flex-col
+            transition-transform duration-300 ease-in-out
+            ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        >
+          <NavContent />
+        </aside>
+      </div>
     </>
   );
 }
