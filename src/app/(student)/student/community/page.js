@@ -3,34 +3,36 @@
 import { useState, useRef, useEffect } from 'react';
 import StudentSidebar from '@/landing_page/StudentSidebar';
 import StudentNavbar from '@/landing_page/StudentNavbar';
-import { Plus, Smile, Send, Paperclip, FileText } from 'lucide-react';
+import { Plus, Smile, Send, Paperclip, FileText, Users, X } from 'lucide-react';
 
 const initialMessages = [
-  { id: 1, sender: 'Oliver Smith', avatar: 'https://randomuser.me/api/portraits/men/41.jpg', time: 'Today 2:20 pm', type: 'file', file: { name: 'UX principles. pdf', size: '1.2 MB' }, self: false },
-  { id: 2, sender: 'You', avatar: 'https://randomuser.me/api/portraits/men/30.jpg', time: 'Today 3:50 pm', type: 'file', file: { name: 'Tech design requirement. pdf', size: '5.2 MB' }, self: true },
-  { id: 3, sender: 'Janeth Black', avatar: 'https://randomuser.me/api/portraits/women/50.jpg', time: '1 min ago', type: 'text', text: 'Hey favour, can you please review the pdf when you can ?', self: false },
+  { id: 1, sender: 'Oliver Smith',  avatar: 'https://randomuser.me/api/portraits/men/41.jpg',   time: 'Today 2:20 pm',  type: 'file', file: { name: 'UX principles.pdf',             size: '1.2 MB' }, self: false },
+  { id: 2, sender: 'You',           avatar: 'https://randomuser.me/api/portraits/men/30.jpg',   time: 'Today 3:50 pm',  type: 'file', file: { name: 'Tech design requirement.pdf',    size: '5.2 MB' }, self: true  },
+  { id: 3, sender: 'Janeth Black',  avatar: 'https://randomuser.me/api/portraits/women/50.jpg', time: '1 min ago',      type: 'text', text: 'Hey favour, can you please review the pdf when you can?', self: false },
 ];
 
 const activeMembers = [
-  { name: 'Kelvin John', avatar: 'https://randomuser.me/api/portraits/men/42.jpg' },
-  { name: 'Skylar Watt', avatar: 'https://randomuser.me/api/portraits/women/43.jpg' },
-  { name: 'Great Roy', avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
-  { name: 'Faith Precoius', avatar: 'https://randomuser.me/api/portraits/women/45.jpg' },
+  { name: 'Kelvin John',   avatar: 'https://randomuser.me/api/portraits/men/42.jpg'   },
+  { name: 'Skylar Watt',   avatar: 'https://randomuser.me/api/portraits/women/43.jpg' },
+  { name: 'Great Roy',     avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
+  { name: 'Faith Precious',avatar: 'https://randomuser.me/api/portraits/women/45.jpg' },
 ];
 
 const filesShared = [
-  { name: 'Tech design review. pdf', size: '5.2 MB', from: 'Precious', time: '1h ago', color: 'text-orange-400' },
-  { name: 'UX principles. pdf', size: '1.2 MB', from: 'Oliver', time: '2d ago', color: 'text-gray-400' },
+  { name: 'Tech design review.pdf', size: '5.2 MB', from: 'Precious', time: '1h ago',  color: 'text-orange-400' },
+  { name: 'UX principles.pdf',      size: '1.2 MB', from: 'Oliver',   time: '2d ago',  color: 'text-gray-400'   },
 ];
 
 const pinnedMessages = [
-  { sender: 'Kelvin John', avatar: 'https://randomuser.me/api/portraits/men/42.jpg', text: 'Hey favour, can you please review the pdf when you can ?' },
+  { sender: 'Kelvin John', avatar: 'https://randomuser.me/api/portraits/men/42.jpg', text: 'Hey favour, can you please review the pdf when you can?' },
 ];
 
 export default function CommunityPage() {
-  const [messages, setMessages] = useState(initialMessages);
-  const [input, setInput] = useState('');
-  const bottomRef = useRef(null);
+  const [sidebarOpen, setSidebarOpen]   = useState(false);
+  const [panelOpen, setPanelOpen]       = useState(false);
+  const [messages, setMessages]         = useState(initialMessages);
+  const [input, setInput]               = useState('');
+  const bottomRef                       = useRef(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -38,47 +40,57 @@ export default function CommunityPage() {
     if (!input.trim()) return;
     setMessages(prev => [...prev, {
       id: Date.now(), sender: 'You', avatar: 'https://randomuser.me/api/portraits/men/30.jpg',
-      time: 'Just now', type: 'text', text: input.trim(), self: true
+      time: 'Just now', type: 'text', text: input.trim(), self: true,
     }]);
     setInput('');
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <StudentSidebar />
-      <div className="flex-1 lg:ml-56 flex flex-col min-h-screen">
-        <StudentNavbar />
+      <StudentSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <div className="flex flex-1 overflow-hidden">
+      <div className="flex-1 lg:ml-56 flex flex-col min-w-0 min-h-screen">
+        <StudentNavbar onMenuClick={() => setSidebarOpen(true)} />
+
+        <div className="flex flex-1 overflow-hidden relative">
+
           {/* ── CHAT AREA ── */}
-          <div className="flex-1 flex flex-col bg-white border-r border-gray-100">
-            {/* Topic banner */}
-            <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50 text-center">
-              <p className="text-sm text-gray-500">Collaborate, share ideas, and ask questions about UI/UX design here.</p>
+          <div className="flex-1 flex flex-col bg-white border-r border-gray-100 min-w-0">
+
+            {/* Topic banner + mobile members button */}
+            <div className="px-4 sm:px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between gap-3">
+              <p className="text-xs sm:text-sm text-gray-500 flex-1 text-center">Collaborate, share ideas, and ask questions about UI/UX design here.</p>
+              {/* Mobile: show members panel toggle */}
+              <button
+                onClick={() => setPanelOpen(true)}
+                className="lg:hidden flex items-center gap-1 text-xs text-gray-500 border border-gray-200 px-2.5 py-1.5 rounded-lg bg-white flex-shrink-0"
+              >
+                <Users size={13} /> Members
+              </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-6">
               {messages.map(msg => (
                 <div key={msg.id} className={`flex flex-col ${msg.self ? 'items-end' : 'items-start'}`}>
                   <div className={`flex items-center gap-2 mb-1.5 ${msg.self ? 'flex-row-reverse' : ''}`}>
-                    <img src={msg.avatar} alt={msg.sender} className="w-8 h-8 rounded-full object-cover" />
-                    <span className="font-semibold text-gray-900 text-sm">{msg.sender}</span>
-                    <span className="text-gray-400 text-xs">{msg.time}</span>
+                    <img src={msg.avatar} alt={msg.sender} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover" />
+                    <span className="font-semibold text-gray-900 text-xs sm:text-sm">{msg.sender}</span>
+                    <span className="text-gray-400 text-xs hidden sm:inline">{msg.time}</span>
                   </div>
 
                   {msg.type === 'file' ? (
-                    <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl max-w-xs ${msg.self ? 'bg-blue-50' : 'bg-gray-50'} border border-gray-100`}>
+                    <div className={`flex items-center gap-3 px-3 sm:px-4 py-3 rounded-2xl max-w-[260px] sm:max-w-xs ${msg.self ? 'bg-blue-50' : 'bg-gray-50'} border border-gray-100`}>
                       <div className="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
                         <FileText size={18} className="text-orange-400" />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{msg.file.name}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{msg.file.name}</p>
                         <p className="text-xs text-gray-400">{msg.file.size}</p>
                       </div>
                     </div>
                   ) : (
-                    <div className={`px-4 py-3 rounded-2xl max-w-sm text-sm leading-relaxed ${msg.self ? 'bg-blue-50 text-gray-800' : 'bg-gray-50 text-gray-800'} border border-gray-100`}>
+                    <div className={`px-3 sm:px-4 py-3 rounded-2xl max-w-[260px] sm:max-w-sm text-sm leading-relaxed ${msg.self ? 'bg-blue-50 text-gray-800' : 'bg-gray-50 text-gray-800'} border border-gray-100`}>
                       {msg.text}
                     </div>
                   )}
@@ -88,10 +100,10 @@ export default function CommunityPage() {
             </div>
 
             {/* Input bar */}
-            <div className="px-5 py-4 border-t border-gray-100 bg-white">
-              <div className="flex items-center gap-3 border border-gray-200 rounded-2xl px-4 py-3 focus-within:border-primary transition-colors">
+            <div className="px-3 sm:px-5 py-3 sm:py-4 border-t border-gray-100 bg-white">
+              <div className="flex items-center gap-2 sm:gap-3 border border-gray-200 rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 focus-within:border-primary transition-colors">
                 <button className="text-gray-400 hover:text-primary transition-colors flex-shrink-0">
-                  <Plus size={20} />
+                  <Plus size={18} />
                 </button>
                 <input
                   type="text"
@@ -99,24 +111,43 @@ export default function CommunityPage() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                  className="flex-1 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent"
+                  className="flex-1 text-sm text-gray-700 placeholder-gray-400 focus:outline-none bg-transparent min-w-0"
                 />
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button className="text-gray-400 hover:text-primary transition-colors"><Smile size={18} /></button>
-                  <button className="text-gray-400 hover:text-primary transition-colors"><Paperclip size={18} /></button>
-                  <button
-                    onClick={sendMessage}
-                    className="p-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors"
-                  >
-                    <Send size={15} />
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                  <button className="text-gray-400 hover:text-primary transition-colors hidden sm:block"><Smile size={18} /></button>
+                  <button className="text-gray-400 hover:text-primary transition-colors hidden sm:block"><Paperclip size={18} /></button>
+                  <button onClick={sendMessage} className="p-1.5 sm:p-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors">
+                    <Send size={14} />
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ── RIGHT PANEL ── */}
-          <div className="hidden lg:flex flex-col w-72 bg-white overflow-y-auto p-5 space-y-6">
+          {/* ── RIGHT PANEL — desktop fixed, mobile slide-in ── */}
+
+          {/* Mobile backdrop */}
+          <div
+            className={`lg:hidden fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${panelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+            onClick={() => setPanelOpen(false)}
+          />
+
+          {/* Panel */}
+          <div className={`
+            fixed right-0 top-0 h-full w-72 bg-white z-50 shadow-2xl
+            transition-transform duration-300 ease-in-out overflow-y-auto p-5 space-y-6
+            lg:static lg:translate-x-0 lg:shadow-none lg:z-auto lg:flex lg:flex-col lg:flex-shrink-0 lg:border-l lg:border-gray-100
+            ${panelOpen ? 'translate-x-0' : 'translate-x-full'}
+          `}>
+
+            {/* Mobile close button */}
+            <div className="flex items-center justify-between lg:hidden mb-2">
+              <span className="font-extrabold text-gray-900 text-sm">Community Info</span>
+              <button onClick={() => setPanelOpen(false)} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400">
+                <X size={18} />
+              </button>
+            </div>
+
             {/* Active Members */}
             <div>
               <h3 className="font-extrabold text-gray-900 text-base mb-4">Active Members</h3>
@@ -173,8 +204,7 @@ export default function CommunityPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="bg-white border-t border-gray-100 px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
+        <footer className="bg-white border-t border-gray-100 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
           <span>© 2026 Team Mike – UI/UX. All rights reserved.</span>
           <div className="flex gap-5">
             {['FAQs', 'Privacy Policy', 'Terms & Condition'].map(l => <button key={l} className="hover:text-primary">{l}</button>)}

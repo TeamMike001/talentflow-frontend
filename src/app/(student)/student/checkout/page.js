@@ -4,19 +4,22 @@ import { useState } from 'react';
 import Navbar from '@/landing_page/Navbar';
 import Footer from '@/landing_page/Footer';
 import Link from 'next/link';
-import { ChevronRight, CreditCard, Check } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 
 const savedCards = [
-  { id: 'visa', type: 'VISA', logo: 'VISA', number: '4855 **** **** ****', expiry: '04/24', name: 'Vako Shvili', color: 'text-blue-700' },
-  { id: 'mc', type: 'MC', logo: 'MC', number: '5795 **** **** ****', expiry: '04/24', name: 'Vako Shvili', color: 'text-red-500' },
-  { id: 'paypal', type: 'PayPal', number: 'You will be redirected to the PayPal site after reviewing your order.', expiry: '', name: '', color: 'text-blue-600' },
-  { id: 'new', type: 'New', number: 'New Payment Cards', expiry: '', name: '', color: 'text-gray-400' },
+  { id: 'visa',   type: 'VISA',   number: '4855 **** **** ****',                                                          expiry: '04/24', name: 'Vako Shvili' },
+  { id: 'mc',     type: 'MC',     number: '5795 **** **** ****',                                                          expiry: '04/24', name: 'Vako Shvili' },
+  { id: 'paypal', type: 'PayPal', number: 'You will be redirected to the PayPal site after reviewing your order.',        expiry: '',      name: ''            },
+  { id: 'new',    type: 'New',    number: 'New Payment Card',                                                             expiry: '',      name: ''            },
 ];
 
 export default function CheckoutPage() {
   const [selectedCard, setSelectedCard] = useState('new');
   const [rememberCard, setRememberCard] = useState(true);
-  const [form, setForm] = useState({ recipientName: '', recipientEmail: '', message: '', cardName: '', cardNumber: '', expiry: '', cvc: '' });
+  const [form, setForm] = useState({
+    recipientName: '', recipientEmail: '', message: '',
+    cardName: '', cardNumber: '', expiry: '', cvc: '',
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,7 +30,8 @@ export default function CheckoutPage() {
     <>
       <Navbar />
       <main className="min-h-screen bg-white">
-        {/* Page title + breadcrumb */}
+
+        {/* Breadcrumb */}
         <div className="border-b border-gray-100 py-4">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 className="text-xl font-extrabold text-gray-900 text-center mb-1">Course</h1>
@@ -41,12 +45,13 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid lg:grid-cols-3 gap-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+          {/* On mobile: stack vertically (summary on top), on desktop: side by side */}
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-3 gap-8 lg:gap-10">
 
             {/* ── LEFT – Form ── */}
             <div className="lg:col-span-2">
-              <h2 className="text-xl font-extrabold text-gray-900 mb-6">Course</h2>
+              <h2 className="text-xl font-extrabold text-gray-900 mb-6">Checkout</h2>
 
               {/* Recipient's Information */}
               <div className="mb-8">
@@ -63,7 +68,7 @@ export default function CheckoutPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-700 mb-1.5">Recipient&apos;s Email:</label>
+                    <label className="block text-sm text-gray-700 mb-1.5">Recipient&apos;s Email</label>
                     <input
                       type="email"
                       placeholder="Email Address"
@@ -92,7 +97,7 @@ export default function CheckoutPage() {
                   {savedCards.map(card => (
                     <label
                       key={card.id}
-                      className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all ${
+                      className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border rounded-xl cursor-pointer transition-all ${
                         selectedCard === card.id ? 'border-primary bg-blue-50/40' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -102,7 +107,7 @@ export default function CheckoutPage() {
                         value={card.id}
                         checked={selectedCard === card.id}
                         onChange={() => setSelectedCard(card.id)}
-                        className="accent-primary"
+                        className="accent-primary flex-shrink-0"
                       />
                       {/* Card logo */}
                       <div className="w-10 flex-shrink-0">
@@ -122,18 +127,18 @@ export default function CheckoutPage() {
                           <CreditCard size={18} className="text-gray-400" />
                         )}
                       </div>
-                      <span className="text-sm text-gray-700 flex-1">{card.number}</span>
-                      {card.expiry && <span className="text-sm text-gray-500">{card.expiry}</span>}
-                      {card.name && <span className="text-sm text-gray-600">{card.name}</span>}
+                      <span className="text-xs sm:text-sm text-gray-700 flex-1 min-w-0 leading-snug">{card.number}</span>
+                      {card.expiry && <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">{card.expiry}</span>}
+                      {card.name && <span className="text-xs sm:text-sm text-gray-600 flex-shrink-0 hidden sm:inline">{card.name}</span>}
                     </label>
                   ))}
                 </div>
 
-                {/* New card form – shown when "new" is selected */}
+                {/* New card form */}
                 {selectedCard === 'new' && (
-                  <div className="space-y-4 border border-primary/30 rounded-xl p-5 bg-blue-50/20">
+                  <div className="space-y-4 border border-primary/30 rounded-xl p-4 sm:p-5 bg-blue-50/20">
                     <div>
-                      <label className="block text-sm text-gray-700 mb-1.5">Name</label>
+                      <label className="block text-sm text-gray-700 mb-1.5">Name on Card</label>
                       <input
                         type="text"
                         placeholder="Name on card"
@@ -148,7 +153,7 @@ export default function CheckoutPage() {
                         <CreditCard size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                           type="text"
-                          placeholder="Label"
+                          placeholder="0000 0000 0000 0000"
                           maxLength={19}
                           value={form.cardNumber}
                           onChange={e => setForm({ ...form, cardNumber: e.target.value })}
@@ -156,7 +161,7 @@ export default function CheckoutPage() {
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <label className="block text-sm text-gray-700 mb-1.5">MM / YY</label>
                         <input
@@ -185,20 +190,28 @@ export default function CheckoutPage() {
                         type="checkbox"
                         checked={rememberCard}
                         onChange={e => setRememberCard(e.target.checked)}
-                        className="accent-primary w-4 h-4"
+                        className="accent-primary w-4 h-4 flex-shrink-0"
                       />
-                      <span className="text-sm text-gray-600">Remember this card, save it on my card list</span>
+                      <span className="text-xs sm:text-sm text-gray-600">Remember this card, save it on my card list</span>
                     </label>
                   </div>
                 )}
+
+                {/* Mobile submit button — sits below form */}
+                <button
+                  onClick={handleSubmit}
+                  className="lg:hidden w-full mt-6 py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all text-sm shadow-md"
+                >
+                  Complete Payment
+                </button>
               </div>
             </div>
 
             {/* ── RIGHT – Order Summary ── */}
             <div>
-              <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm sticky top-24">
+              <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm lg:sticky lg:top-24">
                 {/* Course info */}
-                <div className="p-5 border-b border-gray-100">
+                <div className="p-4 sm:p-5 border-b border-gray-100">
                   <p className="font-bold text-sm text-gray-900 mb-3">Course</p>
                   <div className="flex gap-3 items-start">
                     <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
@@ -217,7 +230,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Order summary */}
-                <div className="p-5">
+                <div className="p-4 sm:p-5">
                   <p className="font-bold text-sm text-gray-900 mb-4">Order Summary</p>
                   <div className="space-y-2.5 mb-4">
                     <div className="flex justify-between text-sm">
@@ -233,9 +246,10 @@ export default function CheckoutPage() {
                     <span className="font-bold text-gray-900 text-sm">Total:</span>
                     <span className="font-extrabold text-xl text-gray-900">$21.97 USD</span>
                   </div>
+                  {/* Desktop-only submit button */}
                   <button
                     onClick={handleSubmit}
-                    className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all text-sm shadow-md"
+                    className="hidden lg:block w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all text-sm shadow-md"
                   >
                     Complete Payment
                   </button>
