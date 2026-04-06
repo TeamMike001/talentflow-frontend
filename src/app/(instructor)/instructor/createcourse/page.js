@@ -1,6 +1,6 @@
 'use client';
 import InstructorSidebar from '@/landing_page/InstructorSidebar';
-import InstructorNavbar from '@/landing_page/InstructorNavbar';
+// import InstructorNavbar from '@/landing_page/InstructorNavbar';
 import InstructorFooter from '@/landing_page/InstructorFooter';
 
 import { useState, useRef } from 'react';
@@ -522,7 +522,7 @@ export default function CreateCoursePage() {
           ${sidebarOpen ? 'lg:ml-56' : 'lg:ml-0'}
         `}
       >
-        <InstructorNavbar title="Create New Course" onMenuClick={() => setSidebarOpen(true)} />
+        {/* <InstructorNavbar title="Create New Course" onMenuClick={() => setSidebarOpen(true)} /> */}
 
         <main className="flex-1 p-3 sm:p-4 md:p-6">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">

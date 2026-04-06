@@ -1,14 +1,43 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Bell, Menu, X } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search, Bell, Menu, X, Settings, User, LogOut } from 'lucide-react';
 
 export default function InstructorNavbar({
   greeting = 'Good Morning',
   title = 'Dashboard',
   onMenuClick,
 }) {
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    // Simulate logout - clear any stored tokens/session
+    // Example: await signOut({ redirect: false });
+    localStorage.removeItem('token'); // if using token
+    sessionStorage.clear();
+    // Redirect to login page
+    router.push('/home');
+  };
+
+  const handleNavigation = (path) => {
+    setDropdownOpen(false);
+    router.push(path);
+  };
 
   return (
     <header className="h-16 bg-white border-b border-gray-100 flex items-center px-4 sm:px-6 gap-3 sticky top-0 z-40">
@@ -53,12 +82,41 @@ export default function InstructorNavbar({
         <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
       </button>
 
-      {/* Avatar */}
-      <img
-        src="https://randomuser.me/api/portraits/men/32.jpg"
-        alt="Jese Leos"
-        className="w-9 h-9 rounded-full object-cover border-2 border-gray-200 cursor-pointer flex-shrink-0"
-      />
+      {/* Avatar with dropdown */}
+      <div className="relative" ref={dropdownRef}>
+        <img
+          src="https://randomuser.me/api/portraits/men/32.jpg"
+          alt="Jese Leos"
+          className="w-9 h-9 rounded-full object-cover border-2 border-gray-200 cursor-pointer flex-shrink-0 hover:opacity-80 transition-opacity"
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+        />
+        {dropdownOpen && (
+          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+            <button
+              onClick={() => handleNavigation('/instructor/profile')}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <User size={16} className="text-gray-500" />
+              <span>Profile</span>
+            </button>
+            <button
+              onClick={() => handleNavigation('/instructor/InstructorSettings')}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <Settings size={16} className="text-gray-500" />
+              <span>Settings</span>
+            </button>
+            <div className="border-t border-gray-100 my-1" />
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <LogOut size={16} />
+              <span>Logout</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Mobile search dropdown */}
       {searchOpen && (

@@ -1,18 +1,29 @@
 'use client';
 
+import { useState } from 'react';
 import StudentSidebar from '@/landing_page/StudentSidebar';
 import StudentNavbar from '@/landing_page/StudentNavbar';
 import Link from 'next/link';
 
 export default function StudentBookmarks() {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <StudentSidebar />
+      
+      {/* Sidebar */}
+      <StudentSidebar
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+      />
 
+      {/* Main Content */}
       <div className="flex-1 lg:ml-56 flex flex-col">
-        <StudentNavbar />
+        
+        {/* Navbar */}
+        <StudentNavbar onMenuClick={() => setIsOpen(true)} />
 
-        <main className="flex-1 flex items-center justify-center p-6">
+                <main className="flex-1 flex items-center justify-center p-6">
           <div className="flex flex-col items-center text-center max-w-xs">
 
             {/* Illustration — dancing figures matching the screenshot */}
