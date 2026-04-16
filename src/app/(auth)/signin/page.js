@@ -1,3 +1,4 @@
+// src/app/(auth)/signin/page.js
 'use client';
 
 import { useState } from 'react';
@@ -51,7 +52,7 @@ const roles = [
 export default function SignInPage() {
   const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [role, setRole] = useState('instructor');
+  const [role, setRole] = useState('student');
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -65,17 +66,24 @@ export default function SignInPage() {
     setError('');
 
     try {
-      const data = await authService.login(form.email, form.password);
+      const response = await authService.login(form.email, form.password);
 
-      localStorage.setItem('token', data.token);
-      if (rememberMe) localStorage.setItem('rememberMe', 'true');
-      if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+      // Check if response has token (successful login - backend returns AuthResponseDto directly)
+      if (response.token && response.user) {
+        localStorage.setItem('token', response.token);
+        if (rememberMe) localStorage.setItem('rememberMe', 'true');
+        localStorage.setItem('user', JSON.stringify(response.user));
 
-      const userRole = (data.user?.role || role).toLowerCase();
-      const redirectPath = userRole === 'student' ? '/student/dashboard' : '/instructor/dashboard';
-
-      router.push(redirectPath);
+        const userRole = response.user.role?.toLowerCase() || role.toLowerCase();
+        const redirectPath = userRole === 'student' ? '/student/dashboard' : '/instructor/dashboard';
+        router.push(redirectPath);
+      } else if (response.error) {
+        setError(response.error);
+      } else {
+        setError('Login failed. Please check your credentials.');
+      }
     } catch (err) {
+      console.error('Login error:', err);
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
@@ -83,14 +91,13 @@ export default function SignInPage() {
   };
 
   const handleGoogleLogin = () => {
-    authService.googleLogin();   // This redirects directly to backend
+    authService.googleLogin();
   };
 
   const inputClass = 'w-full px-4 py-3 border border-blue-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white';
 
   return (
     <main className="min-h-screen flex">
-      {/* Left Panel */}
       <div className="hidden lg:flex lg:w-5/12 bg-primary flex-col items-center justify-between py-16 px-12 text-white text-center">
         <div />
         <div>
@@ -106,7 +113,6 @@ export default function SignInPage() {
         </div>
       </div>
 
-      {/* Right Panel */}
       <div className="w-full lg:w-7/12 flex items-center justify-center px-8 py-12 bg-white overflow-y-auto">
         <div className="w-full max-w-lg">
           <div className="lg:hidden mb-8 text-center">
@@ -119,7 +125,6 @@ export default function SignInPage() {
           <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Sign in</h1>
           <p className="text-gray-400 text-sm mb-6">Sign into your Dashboard</p>
 
-          {/* Role Selector */}
           <div className="mb-6">
             <p className="text-sm font-semibold text-gray-700 mb-3">Who are you signing in as?</p>
             <div className="grid grid-cols-2 gap-3">

@@ -1,8 +1,9 @@
+// src/app/(auth)/signup/page.js
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, Check } from 'lucide-react';
+import { Eye, EyeOff, Check, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
 
@@ -52,7 +53,6 @@ const roles = [
     illustration: <InstructorIllustration />,
     accent: 'border-primary bg-blue-50',
     checkColor: 'bg-primary',
-    redirectPath: '/instructor/dashboard'
   },
   {
     id: 'student',
@@ -62,19 +62,38 @@ const roles = [
     illustration: <StudentIllustration />,
     accent: 'border-green-500 bg-green-50',
     checkColor: 'bg-green-500',
-    redirectPath: '/student/dashboard'
   },
 ];
 
+const securityQuestions = [
+  "What is your mother's maiden name?",
+  "What was your first pet's name?",
+  "What city were you born in?",
+  "What was your first school?",
+  "What is your favorite book?",
+  "What is your father's middle name?",
+  "What was the name of your first teacher?",
+  "What is your favorite movie?",
+];
+
 export default function SignUpPage() {
+  const [step, setStep] = useState(1);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [role, setRole] = useState('instructor');
+  const [role, setRole] = useState('student');
   const [form, setForm] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: ''
+  });
+  const [securityAnswers, setSecurityAnswers] = useState({
+    question1: securityQuestions[0],
+    answer1: '',
+    question2: securityQuestions[1],
+    answer2: '',
+    question3: securityQuestions[2],
+    answer3: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -82,51 +101,56 @@ export default function SignUpPage() {
   const router = useRouter();
   const selectedRole = roles.find(r => r.id === role);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
+  // src/app/(auth)/signup/page.js - Update the handleSubmit for step 2
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (step === 1) {
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match!");
-      setLoading(false);
       return;
     }
-
     if (form.password.length < 6) {
       setError("Password must be at least 6 characters!");
-      setLoading(false);
       return;
     }
+    setError('');
+    setStep(2);
+    return;
+  }
+  
+  // Step 2: Submit registration with security questions
+  setLoading(true);
+  setError('');
 
-    try {
-      const data = await authService.register(
-        form.fullName,
-        form.email,
-        form.password,
-        role.toUpperCase()
-      );
+  try {
+    const response = await authService.register(
+      form.fullName,
+      form.email,
+      form.password,
+      role.toUpperCase(),
+      securityAnswers
+    );
 
-      // Store token and user data
-      localStorage.setItem('token', data.token);
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-      }
-
-      // Redirect based on role
-      const redirectPath = role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard';
+    // Check if response has token (successful registration)
+    if (response.token && response.user) {
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      const redirectPath = role === 'student' ? '/student/dashboard' : '/instructor/dashboard';
       router.push(redirectPath);
-    } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
+    } else if (response.error) {
+      setError(response.error);
+    } else {
+      setError('Registration failed. Please try again.');
     }
-  };
-
-  const handleGoogleSignup = () => {
-    authService.googleLogin();
-  };
-
+  } catch (err) {
+    console.error('Registration error:', err);
+    setError(err.message || 'Registration failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
   const inputClass = 'w-full px-4 py-3 border border-blue-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white';
 
   return (
@@ -155,125 +179,239 @@ export default function SignUpPage() {
             </p>
           </div>
 
-          <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Create an account</h1>
-          <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-            Access your Results, Notes, Assignments, and Courses anytime, anywhere.
-          </p>
-
-          <div className="mb-6">
-            <p className="text-sm font-semibold text-gray-700 mb-3">I want to join as a:</p>
-            <div className="grid grid-cols-2 gap-3">
-              {roles.map((r) => {
-                const isActive = role === r.id;
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setRole(r.id)}
-                    className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 text-center group ${
-                      isActive ? r.accent + ' shadow-md scale-[1.02]' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                      isActive ? r.checkColor + ' opacity-100 scale-100' : 'bg-gray-200 opacity-0 scale-75'
-                    }`}>
-                      <Check size={11} className="text-white" strokeWidth={3} />
-                    </div>
-
-                    <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100 group-hover:scale-105'}`}>
-                      {r.illustration}
-                    </div>
-
-                    <div>
-                      <p className={`font-extrabold text-sm transition-colors ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
-                        {r.label}
-                      </p>
-                      <p className={`text-xs mt-0.5 font-medium transition-colors ${isActive ? (r.id === 'instructor' ? 'text-primary' : 'text-green-600') : 'text-gray-400'}`}>
-                        {r.description}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
+          {/* Progress Steps */}
+          <div className="flex mb-8">
+            <div className="flex-1 text-center">
+              <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center text-sm font-semibold ${
+                step >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
+              }`}>
+                1
+              </div>
+              <p className="text-xs mt-1 text-gray-500">Account Info</p>
+            </div>
+            <div className="flex-1 text-center">
+              <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center text-sm font-semibold ${
+                step >= 2 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
+              }`}>
+                2
+              </div>
+              <p className="text-xs mt-1 text-gray-500">Security</p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">
-                {error}
+          <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
+            {step === 1 ? 'Create an account' : 'Security Questions'}
+          </h1>
+          <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+            {step === 1 
+              ? 'Access your Results, Notes, Assignments, and Courses anytime, anywhere.'
+              : 'Set up security questions to recover your password if forgotten.'}
+          </p>
+
+          {step === 1 && (
+            <>
+              <div className="mb-6">
+                <p className="text-sm font-semibold text-gray-700 mb-3">I want to join as a:</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {roles.map((r) => {
+                    const isActive = role === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setRole(r.id)}
+                        className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 text-center group ${
+                          isActive ? r.accent + ' shadow-md scale-[1.02]' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                          isActive ? r.checkColor + ' opacity-100 scale-100' : 'bg-gray-200 opacity-0 scale-75'
+                        }`}>
+                          <Check size={11} className="text-white" strokeWidth={3} />
+                        </div>
+                        <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100 group-hover:scale-105'}`}>
+                          {r.illustration}
+                        </div>
+                        <div>
+                          <p className={`font-extrabold text-sm transition-colors ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
+                            {r.label}
+                          </p>
+                          <p className={`text-xs mt-0.5 font-medium transition-colors ${isActive ? (r.id === 'instructor' ? 'text-primary' : 'text-green-600') : 'text-gray-400'}`}>
+                            {r.description}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            )}
 
-            <input
-              type="text"
-              placeholder="Full Name"
-              required
-              value={form.fullName}
-              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              className={inputClass}
-            />
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">
+                    {error}
+                  </div>
+                )}
 
-            <input
-              type="email"
-              placeholder="Email"
-              required
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={inputClass}
-            />
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  required
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  className={inputClass}
+                />
 
-            <div className="relative">
-              <input
-                type={showPass ? 'text' : 'password'}
-                placeholder="Password"
-                required
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className={`${inputClass} pr-12`}
-              />
-              <button 
-                type="button" 
-                onClick={() => setShowPass(!showPass)} 
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                <input
+                  type="email"
+                  placeholder="Email"
+                  required
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className={inputClass}
+                />
+
+                <div className="relative">
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    placeholder="Password"
+                    required
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    className={`${inputClass} pr-12`}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPass(!showPass)} 
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type={showConfirm ? 'text' : 'password'}
+                    placeholder="Confirm Password"
+                    required
+                    value={form.confirmPassword}
+                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                    className={`${inputClass} pr-12`}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowConfirm(!showConfirm)} 
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3.5 bg-primary text-white font-bold rounded-xl transition-all text-sm shadow-md hover:shadow-lg"
+                >
+                  Continue to Security
+                </button>
+              </form>
+            </>
+          )}
+
+          {step === 2 && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="bg-blue-50 p-4 rounded-xl mb-2">
+                <div className="flex items-center gap-2 text-blue-600 mb-2">
+                  <Shield size={18} />
+                  <span className="font-semibold text-sm">Password Recovery Questions</span>
+                </div>
+                <p className="text-xs text-blue-600">These will be used to recover your password if forgotten.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Security Question 1</label>
+                <select
+                  value={securityAnswers.question1}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, question1: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm mb-2"
+                >
+                  {securityQuestions.map((q) => (
+                    <option key={q} value={q}>{q}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Your answer"
+                  required
+                  value={securityAnswers.answer1}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, answer1: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Security Question 2</label>
+                <select
+                  value={securityAnswers.question2}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, question2: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm mb-2"
+                >
+                  {securityQuestions.filter(q => q !== securityAnswers.question1).map((q) => (
+                    <option key={q} value={q}>{q}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Your answer"
+                  required
+                  value={securityAnswers.answer2}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, answer2: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Security Question 3</label>
+                <select
+                  value={securityAnswers.question3}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, question3: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm mb-2"
+                >
+                  {securityQuestions.filter(q => q !== securityAnswers.question1 && q !== securityAnswers.question2).map((q) => (
+                    <option key={q} value={q}>{q}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Your answer"
+                  required
+                  value={securityAnswers.answer3}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, answer3: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-3.5 text-white font-bold rounded-xl transition-all text-sm shadow-md hover:shadow-lg ${
+                  role === 'student' ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-blue-700'
+                } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                {loading ? 'Creating account...' : `Sign up as ${selectedRole?.sublabel}`}
               </button>
-            </div>
-
-            <div className="relative">
-              <input
-                type={showConfirm ? 'text' : 'password'}
-                placeholder="Confirm Password"
-                required
-                value={form.confirmPassword}
-                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                className={`${inputClass} pr-12`}
-              />
-              <button 
-                type="button" 
-                onClick={() => setShowConfirm(!showConfirm)} 
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-3.5 text-white font-bold rounded-xl transition-all text-sm shadow-md hover:shadow-lg ${
-                role === 'student' ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-blue-700'
-              } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
-              {loading ? 'Creating account...' : `Sign up as ${selectedRole?.sublabel}`}
-            </button>
-          </form>
+            </form>
+          )}
 
           <p className="text-center text-gray-400 text-sm my-5">Or use social media to sign up</p>
 
           <button
-            onClick={handleGoogleSignup}
+            onClick={() => authService.googleLogin()}
             disabled={loading}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
           >

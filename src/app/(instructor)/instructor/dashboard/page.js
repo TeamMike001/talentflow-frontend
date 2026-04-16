@@ -54,14 +54,25 @@ export default function InstructorDashboard() {
       const token = localStorage.getItem('token');
       
       // Fetch user data
+      console.log('Fetching user data...');
       const userResponse = await fetch(`${API_BASE_URL}/api/users/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (userResponse.ok) {
         const user = await userResponse.json();
+        console.log('User data received:', user);
         setUserData(user);
         localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        console.error('Failed to fetch user data:', userResponse.status);
+        // Try to get from localStorage as fallback
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          console.log('Using stored user data:', parsedUser);
+          setUserData(parsedUser);
+        }
       }
       
       // Fetch instructor's courses
@@ -72,19 +83,17 @@ export default function InstructorDashboard() {
       let courses = [];
       if (coursesResponse.ok) {
         courses = await coursesResponse.json();
+        console.log('Courses received:', courses);
         
         // Fetch enrollment count for each course
         const coursesWithEnrollments = await Promise.all(
           courses.map(async (course) => {
             try {
-              // Try to get enrollment count from multiple possible endpoints
               let studentCount = 0;
               
-              // Method 1: Try to get from course.studentsCount or course.enrolledCount
               if (course.studentsCount) studentCount = course.studentsCount;
               else if (course.enrolledCount) studentCount = course.enrolledCount;
               
-              // Method 2: Fetch enrollments for this course
               if (studentCount === 0) {
                 const enrollmentsResponse = await fetch(`${API_BASE_URL}/api/enrollments/course/${course.id}`, {
                   headers: { 'Authorization': `Bearer ${token}` }
@@ -95,7 +104,6 @@ export default function InstructorDashboard() {
                 }
               }
               
-              // Method 3: Try count endpoint
               if (studentCount === 0) {
                 const countResponse = await fetch(`${API_BASE_URL}/api/enrollments/course/${course.id}/count`, {
                   headers: { 'Authorization': `Bearer ${token}` }
@@ -119,18 +127,16 @@ export default function InstructorDashboard() {
         setMyCourses(coursesWithEnrollments || []);
       }
       
-      // Calculate stats with real student counts
+      // Calculate stats
       const totalMyCourses = courses?.length || 0;
       const publishedCourses = courses?.filter(c => c.published === true).length || 0;
       
-      // Calculate total students enrolled across all courses
       let totalStudentsEnrolled = 0;
       const coursesWithCounts = myCourses.length > 0 ? myCourses : courses;
       coursesWithCounts?.forEach(course => {
         totalStudentsEnrolled += course.studentCount || 0;
       });
       
-      // Fetch all instructors count
       let instructorsCount = 0;
       try {
         const instructorsResponse = await fetch(`${API_BASE_URL}/api/users/instructors`, {
@@ -152,7 +158,7 @@ export default function InstructorDashboard() {
         totalInstructors: instructorsCount
       });
       
-      // Fetch recent enrollments for instructor's courses
+      // Fetch recent enrollments
       try {
         const allEnrollments = [];
         for (const course of courses) {
@@ -165,7 +171,6 @@ export default function InstructorDashboard() {
           }
         }
         
-        // Sort by date and take latest 5
         const sortedEnrollments = allEnrollments.sort((a, b) => 
           new Date(b.enrolledAt) - new Date(a.enrolledAt)
         ).slice(0, 5);
@@ -261,28 +266,47 @@ export default function InstructorDashboard() {
     );
   }
 
+  // Get the actual name from userData (what they signed up with)
+  // Check multiple possible fields where the name could be stored
+  const displayName = userData?.name || userData?.fullName || userData?.username || 'Instructor';
+  const userEmail = userData?.email || '';
+  const userRole = userData?.role || 'Instructor';
+  const userInitial = displayName?.charAt(0)?.toUpperCase() || 'I';
+  
+  const greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  })();
+
+  // Debug log to see what userData contains
+  console.log('UserData in dashboard:', userData);
+  console.log('Display name:', displayName);
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <InstructorSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="flex-1 lg:ml-56 flex flex-col min-h-screen">
         <InstructorNavbar
-          greeting={`Good ${new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}`}
+          greeting={greeting}
           title="Dashboard"
           onMenuClick={() => setSidebarOpen(true)}
+          userName={displayName}
         />
 
         <main className="flex-1 p-3 sm:p-5 lg:p-6 space-y-4 sm:space-y-5">
 
-          {/* Welcome Section */}
+          {/* Welcome Section with Dynamic Name */}
           <div className="mb-2">
             <h1 className="text-2xl font-bold text-gray-900">
-              Welcome back, {userData?.name || 'Instructor'}! 👋
+              {greeting}, {displayName}! 👋
             </h1>
             <p className="text-gray-500 mt-1">Here's your teaching performance at a glance</p>
           </div>
 
-          {/* Stats Grid - 4 cards */}
+          {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
               <div className="flex items-center gap-3">
@@ -336,12 +360,12 @@ export default function InstructorDashboard() {
           {/* Profile Info Card */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-wrap">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              {userData?.name?.charAt(0) || 'I'}
+              {userInitial}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-gray-900 text-base">{userData?.name || 'Instructor'}</p>
-              <p className="text-gray-400 text-sm">{userData?.email || ''}</p>
-              <p className="text-xs text-blue-600 mt-0.5">Instructor</p>
+              <p className="font-bold text-gray-900 text-base">{displayName}</p>
+              <p className="text-gray-400 text-sm">{userEmail}</p>
+              <p className="text-xs text-blue-600 mt-0.5 capitalize">{userRole.toLowerCase()}</p>
             </div>
             <Link href="/instructor/profile" className="flex items-center gap-2 bg-blue-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-blue-700 transition-all">
               <Edit size={13} /> Edit Profile
@@ -425,7 +449,6 @@ export default function InstructorDashboard() {
 
           {/* Bottom Row: Activity + Rating */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-
             {/* Recent Activity */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
               <h2 className="font-bold text-gray-900 text-sm mb-4">Recent Student Activity</h2>
