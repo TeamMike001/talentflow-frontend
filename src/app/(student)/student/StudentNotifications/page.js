@@ -6,7 +6,7 @@ import StudentNavbar from '@/landing_page/StudentNavbar';
 import Link from 'next/link';
 import { Bell, FileText, CheckCircle2, Clock, Trash2, Lock, Download } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function StudentNotifications() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

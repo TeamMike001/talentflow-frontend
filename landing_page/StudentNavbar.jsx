@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Bell, ChevronDown, Search, LogOut, User, Settings, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 
-const API_BASE_URL = 'http://localhost:8080';
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 export default function StudentNavbar({ onMenuClick }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);

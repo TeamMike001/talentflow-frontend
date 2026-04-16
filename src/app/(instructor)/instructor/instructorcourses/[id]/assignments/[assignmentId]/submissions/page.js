@@ -11,7 +11,7 @@ import { assignmentService } from '@/services/assignmentService';
 import { ChevronRight, Save, Trash2, Eye, FileText, Plus, Edit, X, Calendar, Users, Award, BookOpen, Star, Clock, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function InstructorCourseDetail() {
   const { id } = useParams();

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, Star, Users, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, X } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // ── Public Navbar ────────────────────────────────────────────────────────
 function PublicNavbar() {

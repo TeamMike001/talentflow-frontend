@@ -8,7 +8,7 @@ import InstructorFooter from '@/landing_page/InstructorFooter';
 import { instructorService } from '@/services/instructorService';
 import { Upload, X, Plus, Trash2, ChevronDown, ChevronRight, Video, FileText, Check } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 const STEPS = [
   { id: 1, label: 'Basic Information' },

@@ -9,7 +9,7 @@ import { Send, Search, Users, Paperclip, Image, X, Check, Clock, MessageCircle, 
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function InstructorMessages() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

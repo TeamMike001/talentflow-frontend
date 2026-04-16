@@ -7,7 +7,7 @@ import InstructorNavbar from '@/landing_page/InstructorNavbar';
 import InstructorFooter from '@/landing_page/InstructorFooter';
 import { Users, CheckCircle, Clock, XCircle, Eye, FileText, Calendar, Send, X, Download, Image, File, Award, RefreshCw } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function InstructorSubmissions() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

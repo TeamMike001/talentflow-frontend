@@ -10,7 +10,7 @@ import { Search, Star, Users, BookOpen, Eye, Edit, Trash2, Plus } from 'lucide-r
 import Link from 'next/link';
 import { instructorService } from '@/services/instructorService';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 function StarRating({ rating }) {
   return (

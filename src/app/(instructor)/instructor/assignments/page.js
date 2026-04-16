@@ -8,7 +8,7 @@ import InstructorNavbar from '@/landing_page/InstructorNavbar';
 import InstructorFooter from '@/landing_page/InstructorFooter';
 import { BookOpen, Calendar, Users, Eye, ChevronRight, FileText, Clock, CheckCircle } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function InstructorAssignments() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

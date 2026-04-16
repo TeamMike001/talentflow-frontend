@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ChevronDown, X, Menu } from 'lucide-react';
 import Link from 'next/link';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function Navbar() {
   const [coursesOpen, setCoursesOpen] = useState(false);

@@ -7,7 +7,7 @@ import Navbar from '@/landing_page/Navbar';
 import Footer from '@/landing_page/Footer';
 import { Search, Star, Users, BookOpen, Clock, ChevronRight } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function PublicCoursesPage() {
   const [courses, setCourses] = useState([]);

@@ -8,7 +8,7 @@ import StudentNavbar from '@/landing_page/StudentNavbar';
 import Link from 'next/link';
 import { BookOpen, BookMarked, Star, Users, TrendingUp, Clock, Award, CheckCircle, Circle } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function StudentDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

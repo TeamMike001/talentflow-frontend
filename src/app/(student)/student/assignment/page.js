@@ -7,7 +7,7 @@ import StudentSidebar from '@/landing_page/StudentSidebar';
 import StudentNavbar from '@/landing_page/StudentNavbar';
 import { FileText, Calendar, Award, Upload, Eye, Clock, CheckCircle, AlertCircle, RefreshCw, Send, X, Paperclip, Download } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function StudentAssignments() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

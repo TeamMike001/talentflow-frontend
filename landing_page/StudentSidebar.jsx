@@ -8,7 +8,7 @@
     ClipboardList, Headphones, Users, Settings, LogOut, X,
   } from 'lucide-react';
 
-  const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
   const navItems = [
     { icon: Home,          label: 'Home',           href: '/student/dashboard' },
