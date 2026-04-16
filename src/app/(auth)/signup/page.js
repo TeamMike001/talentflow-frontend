@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24">
@@ -14,13 +15,6 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const LinkedInIcon = () => (
-  <svg width="18" height="18" fill="#0A66C2" viewBox="0 0 24 24">
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-  </svg>
-);
-
-/* ── Instructor SVG illustration ── */
 const InstructorIllustration = () => (
   <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
     <rect width="52" height="52" rx="14" fill="#EFF6FF"/>
@@ -36,7 +30,6 @@ const InstructorIllustration = () => (
   </svg>
 );
 
-/* ── Student SVG illustration ── */
 const StudentIllustration = () => (
   <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
     <rect width="52" height="52" rx="14" fill="#F0FDF4"/>
@@ -59,7 +52,7 @@ const roles = [
     illustration: <InstructorIllustration />,
     accent: 'border-primary bg-blue-50',
     checkColor: 'bg-primary',
-    redirect: '/instructor/create-course',
+    redirectPath: '/instructor/dashboard'
   },
   {
     id: 'student',
@@ -69,7 +62,7 @@ const roles = [
     illustration: <StudentIllustration />,
     accent: 'border-green-500 bg-green-50',
     checkColor: 'bg-green-500',
-    redirect: '/student/dashboard',
+    redirectPath: '/student/dashboard'
   },
 ];
 
@@ -77,52 +70,84 @@ export default function SignUpPage() {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [role, setRole] = useState('instructor');
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
-  const router = useRouter();
+  const [form, setForm] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
+  const router = useRouter();
   const selectedRole = roles.find(r => r.id === role);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     if (form.password !== form.confirmPassword) {
-      alert('Passwords do not match!');
+      setError("Passwords do not match!");
+      setLoading(false);
       return;
     }
-    router.push(selectedRole.redirect);
+
+    if (form.password.length < 6) {
+      setError("Password must be at least 6 characters!");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const data = await authService.register(
+        form.fullName,
+        form.email,
+        form.password,
+        role.toUpperCase()
+      );
+
+      // Store token and user data
+      localStorage.setItem('token', data.token);
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+
+      // Redirect based on role
+      const redirectPath = role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard';
+      router.push(redirectPath);
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const inputClass =
-    'w-full px-4 py-3 border border-blue-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white';
+  const handleGoogleSignup = () => {
+    authService.googleLogin();
+  };
+
+  const inputClass = 'w-full px-4 py-3 border border-blue-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white';
 
   return (
     <main className="min-h-screen flex">
-
-      {/* ── LEFT – Blue Panel ── */}
       <div className="hidden lg:flex lg:w-5/12 bg-primary flex-col items-center justify-between py-16 px-12 text-white text-center">
         <div />
         <div>
           <h1 className="text-5xl font-bold mb-6 leading-tight">Hey There!</h1>
           <p className="text-xl leading-relaxed text-white/90">Welcome to TalentFlow.</p>
-          <p className="text-xl leading-relaxed text-white/90">
-            You are just one step away to your feed.
-          </p>
+          <p className="text-xl leading-relaxed text-white/90">You are just one step away to your feed.</p>
         </div>
         <div className="text-center">
           <p className="text-white/80 text-base mb-4">Already have an account?</p>
-          <Link
-            href="/signin"
-            className="inline-block px-10 py-3 bg-white text-primary font-bold rounded-xl hover:bg-blue-50 transition-all text-sm"
-          >
+          <Link href="/signin" className="inline-block px-10 py-3 bg-white text-primary font-bold rounded-xl hover:bg-blue-50 transition-all text-sm">
             Sign in
           </Link>
         </div>
       </div>
 
-      {/* ── RIGHT – Form Panel ── */}
       <div className="w-full lg:w-7/12 flex items-center justify-center px-8 py-12 bg-white overflow-y-auto">
         <div className="w-full max-w-lg">
-
-          {/* Mobile switch */}
           <div className="lg:hidden mb-8 text-center">
             <p className="text-gray-500 text-sm">
               Already have an account?{' '}
@@ -132,11 +157,9 @@ export default function SignUpPage() {
 
           <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Create an account</h1>
           <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-            Access your Results, Notes, Assignments, and Courses anytime, anywhere
-            and keep everything flowing in one place.
+            Access your Results, Notes, Assignments, and Courses anytime, anywhere.
           </p>
 
-          {/* ── ROLE SELECTOR ── */}
           <div className="mb-6">
             <p className="text-sm font-semibold text-gray-700 mb-3">I want to join as a:</p>
             <div className="grid grid-cols-2 gap-3">
@@ -147,62 +170,41 @@ export default function SignUpPage() {
                     key={r.id}
                     type="button"
                     onClick={() => setRole(r.id)}
-                    className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 text-center group
-                      ${isActive
-                        ? r.accent + ' shadow-md scale-[1.02]'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-                      }`}
+                    className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 text-center group ${
+                      isActive ? r.accent + ' shadow-md scale-[1.02]' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                    }`}
                   >
-                    {/* Check badge */}
-                    <div className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    <div className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
                       isActive ? r.checkColor + ' opacity-100 scale-100' : 'bg-gray-200 opacity-0 scale-75'
                     }`}>
                       <Check size={11} className="text-white" strokeWidth={3} />
                     </div>
 
-                    {/* Illustration */}
                     <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100 group-hover:scale-105'}`}>
                       {r.illustration}
                     </div>
 
-                    {/* Labels */}
                     <div>
                       <p className={`font-extrabold text-sm transition-colors ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
                         {r.label}
                       </p>
-                      <p className={`text-xs mt-0.5 font-medium transition-colors ${
-                        isActive
-                          ? r.id === 'instructor' ? 'text-primary' : 'text-green-600'
-                          : 'text-gray-400'
-                      }`}>
+                      <p className={`text-xs mt-0.5 font-medium transition-colors ${isActive ? (r.id === 'instructor' ? 'text-primary' : 'text-green-600') : 'text-gray-400'}`}>
                         {r.description}
                       </p>
                     </div>
-
-                    {/* Active bottom bar */}
-                    <div className={`absolute bottom-0 left-4 right-4 h-0.5 rounded-full transition-all duration-300 ${
-                      isActive
-                        ? r.id === 'instructor' ? 'bg-primary opacity-100' : 'bg-green-500 opacity-100'
-                        : 'opacity-0'
-                    }`} />
                   </button>
                 );
               })}
             </div>
-
-            {/* Confirmation pill */}
-            <div className="mt-3 text-center">
-              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-300 ${
-                role === 'instructor' ? 'bg-blue-50 text-primary' : 'bg-green-50 text-green-600'
-              }`}>
-                <Check size={11} strokeWidth={3} />
-                Registering as: <span className="font-extrabold">{selectedRole?.sublabel}</span>
-              </span>
-            </div>
           </div>
 
-          {/* ── FORM ── */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
+
             <input
               type="text"
               placeholder="Full Name"
@@ -211,6 +213,7 @@ export default function SignUpPage() {
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
               className={inputClass}
             />
+
             <input
               type="email"
               placeholder="Email"
@@ -220,7 +223,6 @@ export default function SignUpPage() {
               className={inputClass}
             />
 
-            {/* Password */}
             <div className="relative">
               <input
                 type={showPass ? 'text' : 'password'}
@@ -230,16 +232,15 @@ export default function SignUpPage() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className={`${inputClass} pr-12`}
               />
-              <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              <button 
+                type="button" 
+                onClick={() => setShowPass(!showPass)} 
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
 
-            {/* Confirm Password */}
             <div className="relative">
               <input
                 type={showConfirm ? 'text' : 'password'}
@@ -249,39 +250,35 @@ export default function SignUpPage() {
                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                 className={`${inputClass} pr-12`}
               />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              <button 
+                type="button" 
+                onClick={() => setShowConfirm(!showConfirm)} 
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
 
-            {/* Submit — colour reflects role */}
             <button
               type="submit"
+              disabled={loading}
               className={`w-full py-3.5 text-white font-bold rounded-xl transition-all text-sm shadow-md hover:shadow-lg ${
-                role === 'student'
-                  ? 'bg-green-500 hover:bg-green-600'
-                  : 'bg-primary hover:bg-primary-dark'
-              }`}
+                role === 'student' ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-blue-700'
+              } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              Sign up as {selectedRole?.sublabel}
+              {loading ? 'Creating account...' : `Sign up as ${selectedRole?.sublabel}`}
             </button>
           </form>
 
-          {/* Divider */}
           <p className="text-center text-gray-400 text-sm my-5">Or use social media to sign up</p>
 
-          <div className="space-y-3">
-            <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-              <GoogleIcon /> Sign up with Google
-            </button>
-            <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-              <LinkedInIcon /> Sign up with LinkedIn
-            </button>
-          </div>
+          <button
+            onClick={handleGoogleSignup}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
+          >
+            <GoogleIcon /> Sign up with Google
+          </button>
         </div>
       </div>
     </main>

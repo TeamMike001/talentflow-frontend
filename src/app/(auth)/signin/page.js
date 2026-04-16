@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, GraduationCap, BookOpen, Check } from 'lucide-react';
+import { Eye, EyeOff, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24">
@@ -14,121 +15,100 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const LinkedInIcon = () => (
-  <svg width="18" height="18" fill="#0A66C2" viewBox="0 0 24 24">
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-  </svg>
-);
-
-/* ── Instructor SVG illustration ── */
 const InstructorIllustration = () => (
   <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
     <rect width="52" height="52" rx="14" fill="#EFF6FF"/>
-    {/* Board */}
     <rect x="10" y="12" width="32" height="20" rx="3" fill="#2563EB" opacity="0.15"/>
     <rect x="10" y="12" width="32" height="20" rx="3" stroke="#2563EB" strokeWidth="1.5"/>
-    {/* Lines on board */}
     <line x1="15" y1="19" x2="29" y2="19" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/>
     <line x1="15" y1="23" x2="25" y2="23" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
     <line x1="15" y1="27" x2="27" y2="27" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
-    {/* Pointer */}
     <line x1="33" y1="17" x2="37" y2="14" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round"/>
-    {/* Person */}
     <circle cx="26" cy="42" r="4" fill="#2563EB" opacity="0.2"/>
     <circle cx="26" cy="38" r="3" fill="#2563EB"/>
     <path d="M19 48c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
 
-/* ── Student SVG illustration ── */
 const StudentIllustration = () => (
   <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
     <rect width="52" height="52" rx="14" fill="#F0FDF4"/>
-    {/* Graduation cap */}
     <path d="M26 14L38 20L26 26L14 20L26 14Z" fill="#16A34A" opacity="0.8"/>
     <path d="M18 22V29C18 29 21 33 26 33C31 33 34 29 34 29V22" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round"/>
-    {/* Tassel */}
     <line x1="38" y1="20" x2="38" y2="27" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round"/>
     <circle cx="38" cy="28" r="1.5" fill="#F59E0B"/>
-    {/* Book */}
     <rect x="16" y="36" width="12" height="9" rx="1.5" fill="#16A34A" opacity="0.2" stroke="#16A34A" strokeWidth="1.2"/>
     <line x1="22" y1="36" x2="22" y2="45" stroke="#16A34A" strokeWidth="1.2"/>
-    {/* Pencil */}
     <rect x="30" y="35" width="4" height="10" rx="1" transform="rotate(15 30 35)" fill="#F59E0B" opacity="0.8"/>
   </svg>
 );
 
 const roles = [
-  {
-    id: 'instructor',
-    label: "I'm a Tutor",
-    sublabel: 'Instructor',
-    description: 'Create & manage courses',
-    illustration: <InstructorIllustration />,
-    accent: 'border-primary bg-blue-50',
-    badgeBg: 'bg-primary',
-    checkColor: 'bg-primary',
-    redirect: '/instructor/dashboard',
-  },
-  {
-    id: 'student',
-    label: "I'm a Student",
-    sublabel: 'Learner',
-    description: 'Access & learn courses',
-    illustration: <StudentIllustration />,
-    accent: 'border-green-500 bg-green-50',
-    badgeBg: 'bg-green-500',
-    checkColor: 'bg-green-500',
-    redirect: '/student/dashboard',
-  },
+  { id: 'instructor', label: "I'm a Tutor", sublabel: 'Instructor', description: 'Create & manage courses', illustration: <InstructorIllustration />, accent: 'border-primary bg-blue-50', checkColor: 'bg-primary' },
+  { id: 'student', label: "I'm a Student", sublabel: 'Learner', description: 'Access & learn courses', illustration: <StudentIllustration />, accent: 'border-green-500 bg-green-50', checkColor: 'bg-green-500' },
 ];
 
 export default function SignInPage() {
   const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [role, setRole] = useState('instructor');
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
-  const router = useRouter();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
+  const router = useRouter();
   const selectedRole = roles.find(r => r.id === role);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    router.push(selectedRole.redirect);
+    setLoading(true);
+    setError('');
+
+    try {
+      const data = await authService.login(form.email, form.password);
+
+      localStorage.setItem('token', data.token);
+      if (rememberMe) localStorage.setItem('rememberMe', 'true');
+      if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+
+      const userRole = (data.user?.role || role).toLowerCase();
+      const redirectPath = userRole === 'student' ? '/student/dashboard' : '/instructor/dashboard';
+
+      router.push(redirectPath);
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const inputClass =
-    'w-full px-4 py-3 border border-blue-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white';
+  const handleGoogleLogin = () => {
+    authService.googleLogin();   // This redirects directly to backend
+  };
+
+  const inputClass = 'w-full px-4 py-3 border border-blue-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white';
 
   return (
     <main className="min-h-screen flex">
-
-      {/* ── LEFT – Blue Panel ── */}
+      {/* Left Panel */}
       <div className="hidden lg:flex lg:w-5/12 bg-primary flex-col items-center justify-between py-16 px-12 text-white text-center">
         <div />
         <div>
           <h1 className="text-5xl font-bold mb-6 leading-tight">Hey There!</h1>
           <p className="text-xl leading-relaxed text-white/90">Welcome Back.</p>
-          <p className="text-xl leading-relaxed text-white/90">
-            You are just one step away to your feed.
-          </p>
+          <p className="text-xl leading-relaxed text-white/90">You are just one step away to your feed.</p>
         </div>
         <div className="text-center">
           <p className="text-white/80 text-base mb-4">Don&apos;t have an account?</p>
-          <Link
-            href="/signup"
-            className="inline-block px-10 py-3 bg-white text-primary font-bold rounded-xl hover:bg-blue-50 transition-all text-sm"
-          >
+          <Link href="/signup" className="inline-block px-10 py-3 bg-white text-primary font-bold rounded-xl hover:bg-blue-50 transition-all text-sm">
             Sign up
           </Link>
         </div>
       </div>
 
-      {/* ── RIGHT – Form Panel ── */}
+      {/* Right Panel */}
       <div className="w-full lg:w-7/12 flex items-center justify-center px-8 py-12 bg-white overflow-y-auto">
         <div className="w-full max-w-lg">
-
-          {/* Mobile switch */}
           <div className="lg:hidden mb-8 text-center">
             <p className="text-gray-500 text-sm">
               Don&apos;t have an account?{' '}
@@ -139,7 +119,7 @@ export default function SignInPage() {
           <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Sign in</h1>
           <p className="text-gray-400 text-sm mb-6">Sign into your Dashboard</p>
 
-          {/* ── ROLE SELECTOR ── */}
+          {/* Role Selector */}
           <div className="mb-6">
             <p className="text-sm font-semibold text-gray-700 mb-3">Who are you signing in as?</p>
             <div className="grid grid-cols-2 gap-3">
@@ -150,70 +130,35 @@ export default function SignInPage() {
                     key={r.id}
                     type="button"
                     onClick={() => setRole(r.id)}
-                    className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 text-center group
-                      ${isActive
-                        ? r.accent + ' shadow-md scale-[1.02]'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-                      }`}
+                    className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 text-center group ${
+                      isActive ? r.accent + ' shadow-md scale-[1.02]' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                    }`}
                   >
-                    {/* Check badge — top right */}
-                    <div className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    <div className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
                       isActive ? r.checkColor + ' opacity-100 scale-100' : 'bg-gray-200 opacity-0 scale-75'
                     }`}>
                       <Check size={11} className="text-white" strokeWidth={3} />
                     </div>
-
-                    {/* Illustration */}
                     <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100 group-hover:scale-105'}`}>
                       {r.illustration}
                     </div>
-
-                    {/* Label */}
                     <div>
                       <p className={`font-extrabold text-sm transition-colors ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
                         {r.label}
                       </p>
-                      <p className={`text-xs mt-0.5 font-medium transition-colors ${
-                        isActive
-                          ? r.id === 'instructor' ? 'text-primary' : 'text-green-600'
-                          : 'text-gray-400'
-                      }`}>
+                      <p className={`text-xs mt-0.5 font-medium transition-colors ${isActive ? (r.id === 'instructor' ? 'text-primary' : 'text-green-600') : 'text-gray-400'}`}>
                         {r.description}
                       </p>
                     </div>
-
-                    {/* Active bottom bar */}
-                    <div className={`absolute bottom-0 left-4 right-4 h-0.5 rounded-full transition-all duration-300 ${
-                      isActive
-                        ? r.id === 'instructor' ? 'bg-primary opacity-100' : 'bg-green-500 opacity-100'
-                        : 'opacity-0'
-                    }`} />
                   </button>
                 );
               })}
             </div>
-
-            {/* Animated label below selection */}
-            <div className={`mt-3 text-center transition-all duration-300 ${role ? 'opacity-100' : 'opacity-0'}`}>
-              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${
-                role === 'instructor' ? 'bg-blue-50 text-primary' : 'bg-green-50 text-green-600'
-              }`}>
-                <Check size={11} strokeWidth={3} />
-                Signing in as: <span className="font-extrabold">{selectedRole?.sublabel}</span>
-              </span>
-            </div>
           </div>
 
-          {/* ── FORM ── */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Username"
-              required
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              className={inputClass}
-            />
+            {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>}
+
             <input
               type="email"
               placeholder="Email"
@@ -222,6 +167,7 @@ export default function SignInPage() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className={inputClass}
             />
+
             <div className="relative">
               <input
                 type={showPass ? 'text' : 'password'}
@@ -231,24 +177,14 @@ export default function SignInPage() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className={`${inputClass} pr-12`}
               />
-              <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
+              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
 
-            {/* Remember + Forgot */}
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 accent-primary rounded"
-                />
+                <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 accent-primary rounded" />
                 <span className="text-gray-600 text-sm">Remember me</span>
               </label>
               <Link href="/forgot-password" className="text-yellow-500 text-sm font-semibold hover:underline">
@@ -256,30 +192,26 @@ export default function SignInPage() {
               </Link>
             </div>
 
-            {/* Sign in button — colour reflects role */}
             <button
               type="submit"
+              disabled={loading}
               className={`w-full py-3.5 text-white font-bold rounded-xl transition-all text-sm shadow-md hover:shadow-lg ${
-                role === 'student'
-                  ? 'bg-green-500 hover:bg-green-600'
-                  : 'bg-primary hover:bg-primary-dark'
-              }`}
+                role === 'student' ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-blue-700'
+              } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              Sign in as {selectedRole?.sublabel}
+              {loading ? 'Signing in...' : `Sign in as ${selectedRole?.sublabel}`}
             </button>
           </form>
 
-          {/* Divider */}
           <p className="text-center text-gray-400 text-sm my-5">Or use social media to sign in</p>
 
-          <div className="space-y-3">
-            <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-              <GoogleIcon /> Sign in with Google
-            </button>
-            <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-              <LinkedInIcon /> Sign in with LinkedIn
-            </button>
-          </div>
+          <button 
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
+          >
+            <GoogleIcon /> Sign in with Google
+          </button>
         </div>
       </div>
     </main>

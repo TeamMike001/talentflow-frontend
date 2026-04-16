@@ -1,36 +1,108 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import StudentSidebar from '@/landing_page/StudentSidebar';
 import StudentNavbar from '@/landing_page/StudentNavbar';
 import Link from 'next/link';
-import { Bell, FileText, CheckCircle2, Clock, Trash2 } from 'lucide-react';
+import { Bell, FileText, CheckCircle2, Clock, Trash2, Lock, Download } from 'lucide-react';
 
-const initialNotifications = [
-  { id: 1, type: 'assignment', icon: FileText,    iconColor: 'text-blue-500',   iconBg: 'bg-blue-50',   title: 'New Assignment',    isNew: true,  message: 'New Assignment posted in UIUX : Create a wire frame for a dashboard',                         time: '3 hrs ago',  read: false },
-  { id: 2, type: 'project',    icon: CheckCircle2, iconColor: 'text-blue-500',   iconBg: 'bg-blue-50',   title: 'Project Update',    isNew: true,  message: "Your group project 'E-commerce Platform' has been updated by Sasha Bright",                  time: '8 hrs ago',  read: false },
-  { id: 3, type: 'reminder',   icon: Clock,        iconColor: 'text-yellow-500', iconBg: 'bg-yellow-50', title: 'Reminder Alert',    isNew: false, message: "Upcoming deadline: 'React Component Library' assignment due in 2 days",                       time: '2 days ago', read: true  },
-  { id: 4, type: 'graded',     icon: FileText,     iconColor: 'text-blue-500',   iconBg: 'bg-blue-50',   title: 'Assignment Graded', isNew: false, message: 'Your assignment Digital Marketing has been graded: 80/100',                                  time: '5 days ago', read: true  },
-];
+const API_BASE_URL = 'http://localhost:8080';
 
 export default function StudentNotifications() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.map(n => 
+        n.id === id ? { ...n, read: true } : n
+      ));
+    } catch (error) {
+      console.error('Failed to mark as read:', error);
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_BASE_URL}/api/notifications/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_BASE_URL}/api/notifications/mark-all-read`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  };
+
+  const getNotificationIcon = (type) => {
+    switch(type) {
+      case 'assignment': return <FileText size={18} className="text-blue-500" />;
+      case 'password_change': return <Lock size={18} className="text-yellow-500" />;
+      case 'data_export': return <Download size={18} className="text-green-500" />;
+      default: return <Bell size={18} className="text-gray-500" />;
+    }
+  };
+
+  const getIconBg = (type) => {
+    switch(type) {
+      case 'assignment': return 'bg-blue-50';
+      case 'password_change': return 'bg-yellow-50';
+      case 'data_export': return 'bg-green-50';
+      default: return 'bg-gray-50';
+    }
+  };
 
   const unreadCount = notifications.filter(n => !n.read).length;
-  const readCount   = notifications.filter(n =>  n.read).length;
-  const totalCount  = notifications.length;
+  const readCount = notifications.filter(n => n.read).length;
+  const totalCount = notifications.length;
 
   const filtered = notifications.filter(n => {
     if (activeTab === 'unread') return !n.read;
-    if (activeTab === 'read')   return  n.read;
+    if (activeTab === 'read') return n.read;
     return true;
   });
-
-  const markAsRead = (id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true, isNew: false } : n));
-  const deleteNotification = (id) => setNotifications(prev => prev.filter(n => n.id !== id));
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true, isNew: false })));
 
   const tabClass = (tab) =>
     `px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all ${
@@ -38,6 +110,14 @@ export default function StudentNotifications() {
         ? 'bg-white border border-gray-200 text-gray-900 shadow-sm'
         : 'text-gray-500 hover:text-gray-700'
     }`;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        Loading notifications...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -61,19 +141,21 @@ export default function StudentNotifications() {
                 </p>
               </div>
 
-              <button
-                onClick={markAllRead}
-                className="border border-gray-200 bg-white text-gray-700 text-xs sm:text-sm font-semibold px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl hover:border-primary hover:text-primary transition-all shadow-sm flex-shrink-0"
-              >
-                Mark all as read
-              </button>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="border border-gray-200 bg-white text-gray-700 text-xs sm:text-sm font-semibold px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl hover:border-primary hover:text-primary transition-all shadow-sm flex-shrink-0"
+                >
+                  Mark all as read
+                </button>
+              )}
             </div>
 
             {/* Tabs */}
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-full w-fit mb-6 overflow-x-auto max-w-full">
-              <button onClick={() => setActiveTab('all')}    className={tabClass('all')}>All ({totalCount})</button>
+              <button onClick={() => setActiveTab('all')} className={tabClass('all')}>All ({totalCount})</button>
               <button onClick={() => setActiveTab('unread')} className={tabClass('unread')}>Unread ({unreadCount})</button>
-              <button onClick={() => setActiveTab('read')}   className={tabClass('read')}>Read ({readCount})</button>
+              <button onClick={() => setActiveTab('read')} className={tabClass('read')}>Read ({readCount})</button>
             </div>
 
             {/* List */}
@@ -86,7 +168,7 @@ export default function StudentNotifications() {
               )}
 
               {filtered.map((notif) => {
-                const Icon = notif.icon;
+                const Icon = getNotificationIcon(notif.type);
                 return (
                   <div
                     key={notif.id}
@@ -95,10 +177,12 @@ export default function StudentNotifications() {
                     <div className="flex items-start justify-between gap-3 sm:gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <Icon size={15} className={notif.iconColor} />
+                          <div className={`p-1.5 rounded-lg ${getIconBg(notif.type)}`}>
+                            {Icon}
+                          </div>
                           <span className="font-bold text-gray-900 text-xs sm:text-sm">{notif.title}</span>
-                          {notif.isNew && (
-                            <span className="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded-full">New</span>
+                          {!notif.read && (
+                            <span className="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full">New</span>
                           )}
                         </div>
 
@@ -106,7 +190,7 @@ export default function StudentNotifications() {
 
                         <div className="flex items-center gap-3">
                           {!notif.read && (
-                            <button onClick={() => markAsRead(notif.id)} className="text-xs text-gray-400 hover:text-primary underline">
+                            <button onClick={() => markAsRead(notif.id)} className="text-xs text-gray-400 hover:text-blue-600 underline">
                               Mark as read
                             </button>
                           )}
@@ -124,15 +208,6 @@ export default function StudentNotifications() {
             </div>
           </div>
         </main>
-
-        <footer className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-gray-100 bg-white text-xs text-gray-400 mt-auto flex-wrap gap-3">
-          <span>© 2026 Team Mike – UI/UX. All rights reserved.</span>
-          <div className="flex items-center gap-4 sm:gap-5">
-            <Link href="/faqs"    className="hover:text-primary transition-colors">FAQs</Link>
-            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link href="/terms"   className="hover:text-primary transition-colors">Terms & Condition</Link>
-          </div>
-        </footer>
       </div>
     </div>
   );
