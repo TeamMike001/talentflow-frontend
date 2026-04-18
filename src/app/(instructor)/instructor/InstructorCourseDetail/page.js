@@ -6,7 +6,7 @@ import {
   Play, MessageSquare, Users, BookOpen, Globe, Paperclip, Clock, Trophy,
   Star, ChevronRight, Save, Trash2, Menu, X, Home, BarChart2, Bell, Settings, LogOut
 } from 'lucide-react';
-import { instructorService } from '/services/instructorService';
+import { instructorService } from '@/services/instructorService';
 
 export default function InstructorCourseDetail() {
   const { id } = useParams();
