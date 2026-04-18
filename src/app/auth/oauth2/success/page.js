@@ -12,21 +12,33 @@ function OAuthSuccessHandler() {
   useEffect(() => {
     const token = searchParams.get('token');
     
+    console.log('=== OAUTH DEBUG ===');
+    console.log('Token received:', token ? 'Yes' : 'No');
+    console.log('Token value:', token?.substring(0, 50) + '...');
+    
     if (token) {
       // Store the token
       localStorage.setItem('token', token);
+      console.log('Token stored in localStorage');
       
       // Decode the token to get user info and role
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('Decoded token payload:', payload);
+        
         const userRole = payload.role?.toLowerCase();
         const userEmail = payload.email;
+        
+        console.log('User role:', userRole);
+        console.log('User email:', userEmail);
         
         // Store basic user info from token
         localStorage.setItem('userEmail', userEmail);
         localStorage.setItem('userRole', userRole);
         
         // Fetch complete user data from backend
+        console.log('Fetching user data from:', `${API_BASE_URL}/api/users/me`);
+        
         fetch(`${API_BASE_URL}/api/users/me`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -34,19 +46,26 @@ function OAuthSuccessHandler() {
           }
         })
         .then(res => {
+          console.log('Fetch user response status:', res.status);
           if (!res.ok) {
-            throw new Error('Failed to fetch user data');
+            throw new Error(`Failed to fetch user data: ${res.status}`);
           }
           return res.json();
         })
         .then(user => {
+          console.log('User data fetched:', user);
           localStorage.setItem('user', JSON.stringify(user));
           
           // Redirect based on role
           const redirectPath = userRole === 'student' 
             ? '/student/dashboard' 
             : '/instructor/dashboard';
-          router.replace(redirectPath);
+          
+          console.log('Redirecting to:', redirectPath);
+          console.log('Current URL:', window.location.href);
+          
+          // Use window.location for more reliable redirect
+          window.location.href = redirectPath;
         })
         .catch((error) => {
           console.error('Failed to fetch user data:', error);
@@ -58,20 +77,23 @@ function OAuthSuccessHandler() {
             role: payload.role
           };
           localStorage.setItem('user', JSON.stringify(basicUser));
+          console.log('Created basic user from token:', basicUser);
           
           // Redirect based on role from token
           const redirectPath = userRole === 'student' 
             ? '/student/dashboard' 
             : '/instructor/dashboard';
-          router.replace(redirectPath);
+          
+          console.log('Fallback redirect to:', redirectPath);
+          window.location.href = redirectPath;
         });
       } catch (error) {
         console.error('Failed to decode token:', error);
-        router.replace('/signin');
+        window.location.href = '/signin?error=invalid_token';
       }
     } else {
-      // No token, redirect to sign in
-      router.replace('/signin');
+      console.log('No token found in URL');
+      window.location.href = '/signin?error=no_token';
     }
   }, [router, searchParams]);
   
