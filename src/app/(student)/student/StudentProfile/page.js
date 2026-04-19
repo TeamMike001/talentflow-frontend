@@ -6,6 +6,8 @@ import StudentNavbar from '@/landing_page/StudentNavbar';
 import Link from 'next/link';
 import { BookOpen, Award, Calendar, Clock, TrendingUp, RefreshCw } from 'lucide-react';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
 // ── Progress bar component ────────────────────────────────────────────────────
 function ProgressBar({ value, color = 'bg-primary' }) {
   const getProgressColor = (progress) => {
@@ -109,7 +111,7 @@ export default function StudentProfile() {
       }
       
       // Fetch user profile
-      const userResponse = await fetch('http://localhost:8080/api/users/me', {
+      const userResponse = await fetch(`${API_BASE_URL}/api/users/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -121,7 +123,7 @@ export default function StudentProfile() {
       setUser(userData);
       
       // Fetch enrollments (courses the student is enrolled in)
-      const enrollmentsResponse = await fetch('http://localhost:8080/api/enrollments/my', {
+      const enrollmentsResponse = await fetch(`${API_BASE_URL}/api/enrollments/my`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -132,7 +134,7 @@ export default function StudentProfile() {
         const coursesWithProgress = await Promise.all(
           enrollments.map(async (enrollment) => {
             try {
-              const courseResponse = await fetch(`http://localhost:8080/api/courses/${enrollment.courseId}`, {
+              const courseResponse = await fetch(`${API_BASE_URL}/api/courses/${enrollment.courseId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
               });
               
@@ -144,7 +146,7 @@ export default function StudentProfile() {
                 
                 // Try to get more accurate progress from progress endpoint
                 try {
-                  const progressResponse = await fetch(`http://localhost:8080/api/progress/courses/${enrollment.courseId}`, {
+                  const progressResponse = await fetch(`${API_BASE_URL}/api/progress/courses/${enrollment.courseId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                   });
                   if (progressResponse.ok) {
@@ -176,7 +178,7 @@ export default function StudentProfile() {
       }
       
       // Fetch certificates
-      const certsResponse = await fetch('http://localhost:8080/api/certificates', {
+      const certsResponse = await fetch(`${API_BASE_URL}/api/certificates`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

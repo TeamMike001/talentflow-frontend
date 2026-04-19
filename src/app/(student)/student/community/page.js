@@ -1,17 +1,19 @@
+// src/app/(student)/student/messages/page.js
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import StudentSidebar from '@/landing_page/StudentSidebar';
 import StudentNavbar from '@/landing_page/StudentNavbar';
-import { Send, Search, Users, Paperclip, Image, X, Check, Clock, MessageCircle, Circle, RefreshCw } from 'lucide-react';
+import { Send, Search, Users, Paperclip, Image, X, Check, Clock, MessageCircle, Circle, RefreshCw, Menu } from 'lucide-react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://talentflow-backend-9hue.onrender.com';
 
 export default function StudentMessages() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileUsersOpen, setMobileUsersOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [connected, setConnected] = useState(false);
@@ -28,7 +30,7 @@ export default function StudentMessages() {
   const [lastMessagePreview, setLastMessagePreview] = useState({});
 
   const stompClientRef = useRef(null);
-  const bottomRef = useRef(null);
+  const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -64,12 +66,15 @@ export default function StudentMessages() {
   useEffect(() => {
     if (selectedUser) {
       fetchConversation(selectedUser.id);
+      if (window.innerWidth < 768) {
+        setMobileUsersOpen(false);
+      }
     }
   }, [selectedUser]);
 
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
@@ -89,7 +94,6 @@ export default function StudentMessages() {
       [userId]: preview
     }));
     
-    // Re-sort users list
     setAllUsers(prevUsers => {
       const updatedUsers = [...prevUsers];
       return updatedUsers.sort((a, b) => {
@@ -105,7 +109,7 @@ export default function StudentMessages() {
     if (!token) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws`),
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -124,10 +128,8 @@ export default function StudentMessages() {
           const senderId = msg.senderId;
           const timestamp = new Date(msg.timestamp).getTime();
           
-          // Update user list with new message info
           updateUserLastMessage(senderId, timestamp, msg.content, false);
           
-          // Add message to chat if it's from selected user
           setMessages(prev => {
             const exists = prev.some(m => m.id === msg.id);
             if (exists) return prev;
@@ -144,10 +146,6 @@ export default function StudentMessages() {
               timestamp: timestamp,
               self: msg.senderId === currentUser?.id,
             };
-            
-            setTimeout(() => {
-              bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
             
             return [...prev, newMsg];
           });
@@ -177,7 +175,6 @@ export default function StudentMessages() {
       
       if (response.ok) {
         const users = await response.json();
-        console.log('Fetched users:', users);
         
         const lastMessageTimes = {};
         const messagePreviews = {};
@@ -208,8 +205,6 @@ export default function StudentMessages() {
         setConversationLastMessages(lastMessageTimes);
         setLastMessagePreview(messagePreviews);
         setAllUsers(users);
-      } else {
-        console.error('Failed to fetch users:', response.status);
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -218,14 +213,12 @@ export default function StudentMessages() {
     }
   };
 
-  // Refresh current conversation
   const refreshConversation = async () => {
     if (!selectedUser) return;
     
     setRefreshing(true);
     try {
       await fetchConversation(selectedUser.id);
-      // Also refresh user list to update last message times
       await fetchAllUsers();
     } catch (error) {
       console.error('Failed to refresh conversation:', error);
@@ -260,10 +253,6 @@ export default function StudentMessages() {
           const lastMsg = formattedMessages[formattedMessages.length - 1];
           updateUserLastMessage(userId, lastMsg.timestamp, lastMsg.text, lastMsg.self);
         }
-        
-        setTimeout(() => {
-          bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
       }
     } catch (error) {
       console.error('Failed to fetch conversation:', error);
@@ -345,10 +334,6 @@ export default function StudentMessages() {
           msg.id === tempId ? { ...msg, status: 'sent' } : msg
         ));
       }, 500);
-      
-      setTimeout(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
       
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -444,11 +429,34 @@ export default function StudentMessages() {
       <div className="flex-1 lg:ml-56 flex flex-col min-h-screen">
         <StudentNavbar onMenuClick={() => setSidebarOpen(true)} />
         
-        <div className="flex-1 flex overflow-hidden">
-          {/* Users Sidebar */}
-          <div className="w-80 bg-white border-r flex flex-col">
-            <div className="p-4 border-b">
-              <h2 className="font-semibold text-gray-800 mb-3">Messages</h2>
+        {/* Mobile Users Toggle Button */}
+        <div className="md:hidden p-3 bg-white border-b">
+          <button
+            onClick={() => setMobileUsersOpen(!mobileUsersOpen)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium"
+          >
+            <Users size={16} />
+            {selectedUser ? `Chatting with ${selectedUser.name}` : 'Select a user'}
+          </button>
+        </div>
+        
+        <div className="flex-1 flex overflow-hidden h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)]">
+          
+          {/* Users Sidebar - Desktop always visible, Mobile conditional */}
+          <div className={`
+            ${mobileUsersOpen ? 'fixed inset-0 z-50 bg-white w-full' : 'hidden'}
+            md:relative md:block md:w-80 md:flex-shrink-0 bg-white border-r flex flex-col h-full
+          `}>
+            <div className="p-4 border-b flex-shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold text-gray-800">Messages</h2>
+                <button 
+                  onClick={() => setMobileUsersOpen(false)}
+                  className="md:hidden p-2 text-gray-500"
+                >
+                  ✕
+                </button>
+              </div>
               <div className="relative">
                 <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -460,6 +468,8 @@ export default function StudentMessages() {
                 />
               </div>
             </div>
+            
+            {/* Scrollable users list */}
             <div className="flex-1 overflow-y-auto">
               {filteredUsers.length === 0 ? (
                 <div className="p-4 text-center text-gray-500">
@@ -473,19 +483,22 @@ export default function StudentMessages() {
                   return (
                     <button
                       key={user.id}
-                      onClick={() => setSelectedUser(user)}
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setMobileUsersOpen(false);
+                      }}
                       className={`w-full flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors text-left ${
                         selectedUser?.id === user.id ? 'bg-blue-50 border-r-2 border-blue-600' : ''
                       }`}
                     >
-                      <div className={`w-10 h-10 ${getUserRoleColor(user.role)} rounded-full flex items-center justify-center text-white font-bold`}>
+                      <div className={`w-10 h-10 ${getUserRoleColor(user.role)} rounded-full flex items-center justify-center text-white font-bold flex-shrink-0`}>
                         {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <p className="font-medium text-gray-900 truncate">{user.name || 'User'}</p>
                           {lastMessageTime && (
-                            <span className="text-xs text-gray-400 ml-1">
+                            <span className="text-xs text-gray-400 ml-1 flex-shrink-0">
                               {formatLastMessageTime(lastMessageTime)}
                             </span>
                           )}
@@ -507,7 +520,7 @@ export default function StudentMessages() {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 flex flex-col bg-[#efeae2]">
+          <div className="flex-1 flex flex-col bg-[#efeae2] h-full">
             {!selectedUser ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center text-gray-500">
@@ -517,20 +530,20 @@ export default function StudentMessages() {
               </div>
             ) : (
               <>
-                <div className="p-4 bg-white border-b flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 ${getUserRoleColor(selectedUser.role)} rounded-full flex items-center justify-center text-white font-bold`}>
+                {/* Chat Header - Fixed */}
+                <div className="p-4 bg-white border-b flex items-center justify-between flex-shrink-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-10 h-10 ${getUserRoleColor(selectedUser.role)} rounded-full flex items-center justify-center text-white font-bold flex-shrink-0`}>
                       {selectedUser.name?.charAt(0) || selectedUser.email?.charAt(0) || 'U'}
                     </div>
-                    <div>
-                      <h2 className="font-semibold text-gray-900">{selectedUser.name || 'User'}</h2>
-                      <p className="text-xs text-gray-500">{selectedUser.email}</p>
+                    <div className="min-w-0">
+                      <h2 className="font-semibold text-gray-900 truncate">{selectedUser.name || 'User'}</h2>
+                      <p className="text-xs text-gray-500 truncate">{selectedUser.email}</p>
                       <p className="text-xs text-blue-600 mt-0.5">{getUserRoleText(selectedUser.role)}</p>
                       <p className="text-xs text-gray-400">Last seen: {formatLastSeen(selectedUser.lastSeen)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {/* Refresh Button */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={refreshConversation}
                       disabled={refreshing}
@@ -539,12 +552,13 @@ export default function StudentMessages() {
                     >
                       <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
                     </button>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-400 whitespace-nowrap hidden sm:block">
                       You: {currentUser?.name}
                     </div>
                   </div>
                 </div>
 
+                {/* Scrollable Messages Area - Sender on Right, Receiver on Left */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.length === 0 ? (
                     <div className="text-center py-20 text-gray-500">
@@ -554,40 +568,58 @@ export default function StudentMessages() {
                   ) : (
                     messages.map((msg) => (
                       <div key={msg.id} className={`flex ${msg.self ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[70%] px-4 py-2 rounded-lg ${
-                          msg.self 
-                            ? 'bg-blue-600 text-white rounded-br-none' 
-                            : 'bg-white text-gray-800 rounded-bl-none shadow-sm'
-                        }`}>
+                        <div className={`max-w-[75%] sm:max-w-[70%] ${msg.self ? 'items-end' : 'items-start'}`}>
+                          {/* Sender name - only show for receiver's messages */}
                           {!msg.self && (
-                            <p className="text-xs font-semibold text-blue-600 mb-1">
-                              {msg.senderName} • {getUserRoleText(msg.senderRole)}
+                            <p className="text-xs font-semibold text-gray-600 mb-1 ml-2">
+                              {msg.senderName}
                             </p>
                           )}
-                          {msg.messageType === 'image' && msg.fileUrl ? (
-                            <img src={msg.fileUrl} alt="Shared" className="max-w-full rounded-lg max-h-48 object-cover cursor-pointer" onClick={() => window.open(msg.fileUrl, '_blank')} />
-                          ) : msg.messageType === 'file' && msg.fileUrl ? (
-                            <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:underline">
-                              <Paperclip size={14} /> Download File
-                            </a>
-                          ) : (
-                            <p className="break-words">{msg.text}</p>
-                          )}
-                          <div className="flex items-center justify-end gap-1 mt-1">
-                            <span className={`text-[10px] ${msg.self ? 'text-blue-100' : 'text-gray-400'}`}>
-                              {msg.time}
-                            </span>
-                            {msg.self && msg.status === 'sent' && <Check size={10} className="text-blue-200" />}
-                            {msg.self && msg.status === 'sending' && <Clock size={10} className="text-blue-200" />}
+                          
+                          {/* Message bubble */}
+                          <div className={`relative px-4 py-2 ${
+                            msg.self 
+                              ? 'bg-blue-600 text-white rounded-2xl rounded-br-md' 
+                              : 'bg-white text-gray-800 rounded-2xl rounded-bl-md shadow-sm'
+                          }`}>
+                            {msg.messageType === 'image' && msg.fileUrl ? (
+                              <img 
+                                src={msg.fileUrl} 
+                                alt="Shared" 
+                                className="max-w-full rounded-lg max-h-60 object-cover cursor-pointer" 
+                                onClick={() => window.open(msg.fileUrl, '_blank')} 
+                              />
+                            ) : msg.messageType === 'file' && msg.fileUrl ? (
+                              <a 
+                                href={msg.fileUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="flex items-center gap-2 text-blue-600 hover:underline"
+                              >
+                                <Paperclip size={14} /> Download File
+                              </a>
+                            ) : (
+                              <p className="break-words whitespace-pre-wrap text-sm">{msg.text}</p>
+                            )}
+                            
+                            {/* Timestamp and status */}
+                            <div className={`flex items-center justify-end gap-1 mt-1 ${
+                              msg.self ? 'text-blue-200' : 'text-gray-400'
+                            }`}>
+                              <span className="text-[10px]">{msg.time}</span>
+                              {msg.self && msg.status === 'sent' && <Check size={10} className="text-blue-200" />}
+                              {msg.self && msg.status === 'sending' && <Clock size={10} className="text-blue-200" />}
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))
                   )}
-                  <div ref={bottomRef} />
+                  <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-4 bg-white border-t">
+                {/* Input Area - Fixed */}
+                <div className="p-4 bg-white border-t flex-shrink-0">
                   {selectedFile && (
                     <div className="mb-2 p-2 bg-gray-100 rounded-lg flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -601,7 +633,11 @@ export default function StudentMessages() {
                   )}
                   <div className="flex gap-2">
                     <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,application/pdf,.doc,.docx,.txt" />
-                    <button onClick={() => fileInputRef.current?.click()} className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors" disabled={!connected || sending}>
+                    <button 
+                      onClick={() => fileInputRef.current?.click()} 
+                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0" 
+                      disabled={!connected || sending}
+                    >
                       <Paperclip size={20} />
                     </button>
                     <input
@@ -617,7 +653,7 @@ export default function StudentMessages() {
                     <button
                       onClick={sendMessage}
                       disabled={!connected || (!input.trim() && !selectedFile) || sending || uploading}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 transition-colors flex-shrink-0"
                     >
                       {sending || uploading ? <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div> : <Send size={18} />}
                     </button>
@@ -628,7 +664,7 @@ export default function StudentMessages() {
           </div>
         </div>
         
-        <footer className="bg-white border-t py-3 text-center text-xs text-gray-400">
+        <footer className="bg-white border-t py-3 text-center text-xs text-gray-400 flex-shrink-0 hidden md:block">
           © 2026 TalentFlow. All rights reserved.
         </footer>
       </div>

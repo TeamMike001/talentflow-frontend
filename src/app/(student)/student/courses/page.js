@@ -8,13 +8,16 @@ import StudentNavbar from '@/landing_page/StudentNavbar';
 import { courseService } from '@/services/courseService';
 import { enrollmentService } from '@/services/enrollmentService';
 import { bookmarkService } from '@/services/bookmarkService';
-import { Bookmark, BookmarkCheck, Search, Filter, X, Star, Users } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Search, Filter, X, Star, Users, ChevronDown, ChevronUp, Clock, Award } from 'lucide-react';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function BrowseCourses() {
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [enrolledStatus, setEnrolledStatus] = useState({});
   const [bookmarkedStatus, setBookmarkedStatus] = useState({});
+  const [studentCounts, setStudentCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [bookmarkLoading, setBookmarkLoading] = useState({});
@@ -29,6 +32,10 @@ export default function BrowseCourses() {
   const [sortBy, setSortBy] = useState('trending');
   const [categories, setCategories] = useState([]);
   const [levels] = useState(['all', 'Beginner', 'Intermediate', 'Advanced', 'All Levels']);
+  
+  // Selected course for modal
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [showCourseModal, setShowCourseModal] = useState(false);
 
   const router = useRouter();
 
@@ -45,12 +52,38 @@ export default function BrowseCourses() {
     filterAndSortCourses();
   }, [searchQuery, courses, selectedCategory, selectedLevel, sortBy]);
 
+  // Function to fetch student count for a course
+  const fetchStudentCount = async (courseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/enrollments/course/${courseId}/count`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const count = await response.json();
+        setStudentCounts(prev => ({ ...prev, [courseId]: count }));
+        return count;
+      }
+    } catch (err) {
+      console.error(`Failed to fetch student count for course ${courseId}:`, err);
+    }
+    return 0;
+  };
+
   const fetchCourses = async () => {
     try {
       setLoading(true);
       setError('');
       
-      const data = await courseService.getPublishedCourses();
+      const response = await fetch(`${API_BASE_URL}/api/courses/published`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch courses');
+      const data = await response.json();
+      
       setCourses(data || []);
       setFilteredCourses(data || []);
       
@@ -58,35 +91,37 @@ export default function BrowseCourses() {
       const uniqueCategories = ['all', ...new Set(data.map(c => c.category).filter(Boolean))];
       setCategories(uniqueCategories);
       
-      await fetchEnrollmentAndBookmarkStatus(data);
+      // Fetch enrollment, bookmark status, and student counts for each course
+      const enrollStatusMap = {};
+      const bookmarkStatusMap = {};
+      const countsMap = {};
+      
+      for (const course of (data || [])) {
+        try {
+          const [isEnrolled, isBookmarked, studentCount] = await Promise.all([
+            enrollmentService.checkEnrollment(course.id).catch(() => false),
+            bookmarkService.isBookmarked(course.id).catch(() => false),
+            fetchStudentCount(course.id).catch(() => 0)
+          ]);
+          enrollStatusMap[course.id] = isEnrolled;
+          bookmarkStatusMap[course.id] = isBookmarked;
+          countsMap[course.id] = studentCount;
+        } catch (err) {
+          console.warn(`Failed to get status for course ${course.id}:`, err);
+          enrollStatusMap[course.id] = false;
+          bookmarkStatusMap[course.id] = false;
+          countsMap[course.id] = 0;
+        }
+      }
+      setEnrolledStatus(enrollStatusMap);
+      setBookmarkedStatus(bookmarkStatusMap);
+      setStudentCounts(countsMap);
     } catch (err) {
       console.error('Failed to fetch courses:', err);
       setError(err.message || 'Failed to load courses. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchEnrollmentAndBookmarkStatus = async (coursesList) => {
-    const enrollStatusMap = {};
-    const bookmarkStatusMap = {};
-    
-    for (const course of (coursesList || [])) {
-      try {
-        const [isEnrolled, isBookmarked] = await Promise.all([
-          enrollmentService.checkEnrollment(course.id).catch(() => false),
-          bookmarkService.isBookmarked(course.id).catch(() => false)
-        ]);
-        enrollStatusMap[course.id] = isEnrolled;
-        bookmarkStatusMap[course.id] = isBookmarked;
-      } catch (err) {
-        console.warn(`Failed to get status for course ${course.id}:`, err);
-        enrollStatusMap[course.id] = false;
-        bookmarkStatusMap[course.id] = false;
-      }
-    }
-    setEnrolledStatus(enrollStatusMap);
-    setBookmarkedStatus(bookmarkStatusMap);
   };
 
   const filterAndSortCourses = () => {
@@ -118,36 +153,36 @@ export default function BrowseCourses() {
     // Sort
     switch(sortBy) {
       case 'rating':
-        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        filtered.sort((a, b) => (b.averageRating || b.rating || 0) - (a.averageRating || a.rating || 0));
         break;
       case 'newest':
         filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         break;
       case 'students':
-        filtered.sort((a, b) => (b.students || 0) - (a.students || 0));
+        filtered.sort((a, b) => (studentCounts[b.id] || 0) - (studentCounts[a.id] || 0));
         break;
       default:
-        filtered.sort((a, b) => (b.students || 0) - (a.students || 0));
+        filtered.sort((a, b) => (studentCounts[b.id] || 0) - (studentCounts[a.id] || 0));
     }
     
     setFilteredCourses(filtered);
   };
 
   const handleViewCourse = (courseId) => {
-    if (courseId) {
-      router.push(`/student/courses/${courseId}`);
-    }
+    router.push(`/student/courses/${courseId}`);
   };
 
   const handleEnroll = async (courseId, e) => {
     e.stopPropagation();
-    if (!courseId) return;
-    
     setActionLoading(prev => ({ ...prev, [courseId]: 'enrolling' }));
     try {
       await enrollmentService.enroll(courseId);
-      // Update local state immediately
       setEnrolledStatus(prev => ({ ...prev, [courseId]: true }));
+      
+      // Update student count immediately after enrollment
+      const newCount = await fetchStudentCount(courseId);
+      setStudentCounts(prev => ({ ...prev, [courseId]: newCount }));
+      
       alert('Successfully enrolled in the course!');
     } catch (err) {
       alert(err.message || 'Failed to enroll');
@@ -158,16 +193,18 @@ export default function BrowseCourses() {
 
   const handleUnenroll = async (courseId, e) => {
     e.stopPropagation();
-    if (!courseId) return;
-    
     if (!confirm('Are you sure you want to unenroll from this course? Your progress will be lost.')) {
       return;
     }
     setActionLoading(prev => ({ ...prev, [courseId]: 'unenrolling' }));
     try {
       await enrollmentService.unenroll(courseId);
-      // Update local state immediately
       setEnrolledStatus(prev => ({ ...prev, [courseId]: false }));
+      
+      // Update student count immediately after unenrollment
+      const newCount = await fetchStudentCount(courseId);
+      setStudentCounts(prev => ({ ...prev, [courseId]: newCount }));
+      
       alert('Successfully unenrolled from the course.');
     } catch (err) {
       alert(err.message || 'Failed to unenroll');
@@ -178,8 +215,6 @@ export default function BrowseCourses() {
 
   const handleAddBookmark = async (courseId, e) => {
     e.stopPropagation();
-    if (!courseId) return;
-    
     setBookmarkLoading(prev => ({ ...prev, [courseId]: true }));
     try {
       await bookmarkService.addBookmark(courseId);
@@ -195,8 +230,6 @@ export default function BrowseCourses() {
 
   const handleRemoveBookmark = async (courseId, e) => {
     e.stopPropagation();
-    if (!courseId) return;
-    
     setBookmarkLoading(prev => ({ ...prev, [courseId]: true }));
     try {
       await bookmarkService.removeBookmark(courseId);
@@ -208,6 +241,11 @@ export default function BrowseCourses() {
     } finally {
       setBookmarkLoading(prev => ({ ...prev, [courseId]: false }));
     }
+  };
+
+  const openCourseModal = (course) => {
+    setSelectedCourse(course);
+    setShowCourseModal(true);
   };
 
   const clearFilters = () => {
@@ -388,6 +426,8 @@ export default function BrowseCourses() {
                   const isBookmarked = bookmarkedStatus[course.id];
                   const isLoading = actionLoading[course.id];
                   const isBookmarkLoading = bookmarkLoading[course.id];
+                  const rating = course.averageRating || course.rating || 4.5;
+                  const studentCount = studentCounts[course.id] || 0;
                   
                   return (
                     <div 
@@ -397,7 +437,7 @@ export default function BrowseCourses() {
                     >
                       <div className="relative">
                         <img 
-                          src={course.thumbnailUrl || 'https://via.placeholder.com/600x400?text=Course+Image'} 
+                          src={course.thumbnailUrl || course.thumbnail || 'https://via.placeholder.com/600x400?text=Course+Image'} 
                           alt={course.title} 
                           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
@@ -434,7 +474,7 @@ export default function BrowseCourses() {
                           </span>
                           <div className="flex items-center gap-1">
                             <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium">{course.rating || 4.5}</span>
+                            <span className="text-sm font-medium">{rating.toFixed(1)}</span>
                             <span className="text-xs text-gray-400">({course.reviewCount || 0})</span>
                           </div>
                         </div>
@@ -449,9 +489,16 @@ export default function BrowseCourses() {
                         
                         <div className="flex items-center gap-2 mb-4">
                           <Users size={14} className="text-gray-400" />
-                          <span className="text-xs text-gray-500">
-                            {(course.students || 0).toLocaleString()} students
+                          <span className="text-xs text-gray-500 font-semibold">
+                            {studentCount} student{studentCount !== 1 ? 's' : ''}
                           </span>
+                          {course.duration && (
+                            <>
+                              <span className="text-gray-300">•</span>
+                              <Clock size={14} className="text-gray-400" />
+                              <span className="text-xs text-gray-500">{course.duration} hrs</span>
+                            </>
+                          )}
                         </div>
                         
                         <div className="flex justify-between items-center">
@@ -472,6 +519,12 @@ export default function BrowseCourses() {
                               {isLoading === 'enrolling' ? '...' : 'Enroll Now'}
                             </button>
                           )}
+                          <button
+                            onClick={() => openCourseModal(course)}
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          >
+                            Quick View
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -482,6 +535,95 @@ export default function BrowseCourses() {
           </div>
         </main>
       </div>
+
+      {/* Course Details Modal */}
+      {showCourseModal && selectedCourse && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCourseModal(false)}>
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="relative h-48 bg-gradient-to-r from-blue-600 to-indigo-600">
+              <img
+                src={selectedCourse.thumbnailUrl || 'https://via.placeholder.com/800x300?text=Course'}
+                alt={selectedCourse.title}
+                className="w-full h-full object-cover opacity-50"
+                onError={(e) => { e.target.src = 'https://via.placeholder.com/800x300?text=Course'; }}
+              />
+              <button
+                onClick={() => setShowCourseModal(false)}
+                className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-semibold text-blue-600 uppercase">{selectedCourse.category || 'COURSE'}</span>
+                <div className="flex items-center gap-1">
+                  <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                  <span className="text-sm font-medium">{(selectedCourse.averageRating || 4.5).toFixed(1)}</span>
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">{selectedCourse.title}</h2>
+              <p className="text-gray-600 mb-6">{selectedCourse.description}</p>
+              
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center p-3 bg-gray-50 rounded-xl">
+                  <Users size={20} className="mx-auto mb-1 text-blue-500" />
+                  <p className="text-lg font-bold">{studentCounts[selectedCourse.id] || 0}</p>
+                  <p className="text-xs text-gray-500">Students</p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-xl">
+                  <Clock size={20} className="mx-auto mb-1 text-blue-500" />
+                  <p className="text-lg font-bold">{selectedCourse.duration || 'Self'}</p>
+                  <p className="text-xs text-gray-500">Duration</p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-xl">
+                  <Award size={20} className="mx-auto mb-1 text-blue-500" />
+                  <p className="text-lg font-bold">{selectedCourse.level || 'All'}</p>
+                  <p className="text-xs text-gray-500">Level</p>
+                </div>
+              </div>
+              
+              {selectedCourse.teaches && selectedCourse.teaches.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">What You'll Learn</h3>
+                  <ul className="space-y-1">
+                    {selectedCourse.teaches.slice(0, 5).map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {selectedCourse.requirements && selectedCourse.requirements.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">Requirements</h3>
+                  <ul className="space-y-1">
+                    {selectedCourse.requirements.slice(0, 5).map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <button
+                onClick={() => {
+                  setShowCourseModal(false);
+                  handleViewCourse(selectedCourse.id);
+                }}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
+              >
+                View Full Course Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -13,15 +13,14 @@ import ProgressBar from '@/components/ProgressBar';
 import { 
   Bookmark, BookmarkCheck, Play, Clock, Users, Star, ChevronLeft, 
   ChevronDown, ChevronRight, Award, Target, ListChecks, User, 
-  GraduationCap, Calendar, Globe, Heart, CheckCircle, Eye  // Added Eye here
+  GraduationCap, Calendar, Globe, Heart, CheckCircle, Eye
 } from 'lucide-react';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
 export default function StudentCourseDetail() {
-  // Fix: Properly get the id from params
-  const params = useParams();
-  const id = params?.id;
+  const { id } = useParams();
   const router = useRouter();
-  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,12 +32,7 @@ export default function StudentCourseDetail() {
   const [openSections, setOpenSections] = useState({});
   const [courseProgress, setCourseProgress] = useState(0);
   const [lectureProgress, setLectureProgress] = useState({});
-
-  // Debug: Log the id
-  useEffect(() => {
-    console.log('Course ID from params:', id);
-    console.log('Full params object:', params);
-  }, [id, params]);
+  const [studentCount, setStudentCount] = useState(0);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -46,27 +40,18 @@ export default function StudentCourseDetail() {
       router.push('/signin');
       return;
     }
-    
-    // Validate id before fetching
-    if (!id) {
-      setError('Course ID is required');
-      setLoading(false);
-      return;
-    }
-    
     fetchCourseData();
-  }, [id]); // Add id as dependency
+  }, [id]);
 
   useEffect(() => {
-    if (isEnrolled && course && id) {
+    if (isEnrolled && course) {
       fetchCourseProgress();
     }
-  }, [isEnrolled, course, id]);
+  }, [isEnrolled, course]);
 
   useEffect(() => {
-    // Listen for progress updates
     const handleProgressUpdate = (event) => {
-      if (event.detail?.courseId === id && id) {
+      if (event.detail?.courseId === id) {
         fetchCourseProgress();
       }
     };
@@ -75,22 +60,44 @@ export default function StudentCourseDetail() {
     return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
   }, [id]);
 
+  const fetchStudentCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/enrollments/course/${id}/count`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const count = await response.json();
+        setStudentCount(count);
+        return count;
+      }
+    } catch (err) {
+      console.error('Failed to fetch student count:', err);
+    }
+    return 0;
+  };
+
   const fetchCourseData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching course with ID:', id);
+      const token = localStorage.getItem('token');
+      
+      // Fetch course details
       const courseData = await courseService.getCourseById(id);
-      console.log('Course data received:', courseData);
       setCourse(courseData);
       
+      // Fetch enrollment and bookmark status
       const [enrolled, bookmarked] = await Promise.all([
         enrollmentService.checkEnrollment(id).catch(() => false),
         bookmarkService.isBookmarked(id).catch(() => false),
       ]);
       setIsEnrolled(enrolled);
       setIsBookmarked(bookmarked);
+      
+      // Fetch student count
+      await fetchStudentCount();
       
     } catch (err) {
       console.error('Failed to fetch course:', err);
@@ -101,12 +108,10 @@ export default function StudentCourseDetail() {
   };
 
   const fetchCourseProgress = async () => {
-    if (!id) return;
     try {
       const progress = await progressService.getCourseProgress(id);
       setCourseProgress(progress);
       
-      // Fetch individual lecture progress
       const lecturesProgress = await progressService.getAllLecturesProgress(id);
       setLectureProgress(lecturesProgress || {});
     } catch (error) {
@@ -115,11 +120,15 @@ export default function StudentCourseDetail() {
   };
 
   const handleEnroll = async () => {
-    if (!id) return;
     setActionLoading(true);
     try {
       await enrollmentService.enroll(id);
       setIsEnrolled(true);
+      
+      // Update student count immediately after enrollment
+      const newCount = await fetchStudentCount();
+      setStudentCount(newCount);
+      
       alert('Successfully enrolled!');
     } catch (err) {
       alert(err.message || 'Failed to enroll');
@@ -129,13 +138,17 @@ export default function StudentCourseDetail() {
   };
 
   const handleUnenroll = async () => {
-    if (!id) return;
     if (!confirm('Unenroll? Your progress will be lost.')) return;
     setActionLoading(true);
     try {
       await enrollmentService.unenroll(id);
       setIsEnrolled(false);
       setCourseProgress(0);
+      
+      // Update student count immediately after unenrollment
+      const newCount = await fetchStudentCount();
+      setStudentCount(newCount);
+      
       alert('Successfully unenrolled');
     } catch (err) {
       alert(err.message || 'Failed to unenroll');
@@ -145,7 +158,6 @@ export default function StudentCourseDetail() {
   };
 
   const handleBookmark = async () => {
-    if (!id) return;
     setActionLoading(true);
     try {
       if (isBookmarked) {
@@ -167,7 +179,6 @@ export default function StudentCourseDetail() {
   };
 
   const handleLectureClick = (lecture) => {
-    if (!id) return;
     router.push(`/student/courses/${id}/lectures/${lecture.id}`);
   };
 
@@ -262,10 +273,10 @@ export default function StudentCourseDetail() {
                   </span>
                   <div className="flex items-center gap-2 text-white/80 text-sm">
                     <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                    <span>{course.averageRating || '4.8'}</span>
+                    <span>{course.averageRating || course.rating || '4.8'}</span>
                     <span className="text-white/50">•</span>
                     <Users size={14} />
-                    <span>{course.enrolledCount || 0} students</span>
+                    <span>{studentCount} students</span>
                   </div>
                 </div>
                 <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">{course.title}</h1>
@@ -326,14 +337,14 @@ export default function StudentCourseDetail() {
                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <Star size={22} className="text-yellow-500" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{course.averageRating || '4.8'}</p>
+                <p className="text-2xl font-bold text-gray-900">{course.averageRating || course.rating || '4.8'}</p>
                 <p className="text-xs text-gray-500">Rating</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <Users size={22} className="text-purple-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{course.enrolledCount || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{studentCount}</p>
                 <p className="text-xs text-gray-500">Students</p>
               </div>
               <div className="text-center">
@@ -510,7 +521,7 @@ export default function StudentCourseDetail() {
                             </div>
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <Users size={16} className="text-primary" />
-                              <span>10,000+ students</span>
+                              <span>{studentCount}+ students</span>
                             </div>
                           </div>
                         </div>
