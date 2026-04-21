@@ -1,4 +1,4 @@
-import Navbar from '@/landing_page/Navbar';
+import Navbar from '@/landing_page/StudentNavbar';
 import Footer from '@/landing_page/Footer';
 import { Clock, Star, Users, Play, CheckCircle, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
@@ -82,12 +82,17 @@ export default function CourseDetailPage({ params }) {
                 </div>
                 <div className="p-6">
                   <p className="text-3xl font-extrabold text-primary mb-4">{course.price}</p>
-                  <button className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all shadow-md mb-3 text-sm">
-                    Enroll Now
-                  </button>
-                  <button className="w-full py-3.5 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-primary hover:text-primary transition-all text-sm">
-                    Try Free Preview
-                  </button>
+                  <Link href="/student/checkout">
+                    <button className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md mb-3 text-sm">
+                      Enroll Now
+                    </button>
+                  </Link>
+
+                  <Link href="/courses">
+                    <button className="w-full py-4 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-blue-600 hover:text-blue-600 transition-all text-sm">
+                      Try Free Preview
+                    </button>
+                  </Link>
                   <p className="text-center text-gray-400 text-xs mt-4">30-Day Money-Back Guarantee</p>
                 </div>
               </div>
