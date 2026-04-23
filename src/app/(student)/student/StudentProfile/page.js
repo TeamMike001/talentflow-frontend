@@ -6,6 +6,7 @@ import StudentNavbar from '@/landing_page/StudentNavbar';
 import Link from 'next/link';
 import { BookOpen, Award, Calendar, Clock, TrendingUp, RefreshCw } from 'lucide-react';
 
+<<<<<<< HEAD
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // ── Certificates earned ───────────────────────────────────────────────────────
@@ -15,6 +16,31 @@ const certificates = [
   { id: 3, emoji: '📜', bg: 'bg-orange-50', title: 'Database Management',             issued: 'April 18, 2026'    },
   { id: 4, emoji: '💎', bg: 'bg-blue-50',   title: 'Digital Marketing Certificate',   issued: 'April 20, 2026'    },
 ];
+=======
+// ── Progress bar component ────────────────────────────────────────────────────
+function ProgressBar({ value, color = 'bg-primary' }) {
+  const getProgressColor = (progress) => {
+    if (progress < 30) return 'bg-red-500';
+    if (progress < 70) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+  
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs">
+        <span className="text-gray-500">Progress</span>
+        <span className="font-medium text-gray-700">{Math.round(value)}%</span>
+      </div>
+      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div 
+          className={`h-full ${getProgressColor(value)} rounded-full transition-all duration-500 ease-out`} 
+          style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+>>>>>>> parent of dea0596 (commit change)
 
 // ── Progress bar ──────────────────────────────────────────────────────────────
 function ProgressBar({ value, color = 'bg-primary' }) {
@@ -57,7 +83,7 @@ export default function StudentProfile() {
       }
       
       // Fetch user profile
-      const userResponse = await fetch(`${API_BASE_URL}/api/users/me`, {
+      const userResponse = await fetch('http://localhost:8080/api/users/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -69,7 +95,7 @@ export default function StudentProfile() {
       setUser(userData);
       
       // Fetch enrollments (courses the student is enrolled in)
-      const enrollmentsResponse = await fetch(`${API_BASE_URL}/api/enrollments/my`, {
+      const enrollmentsResponse = await fetch('http://localhost:8080/api/enrollments/my', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -80,7 +106,7 @@ export default function StudentProfile() {
         const coursesWithProgress = await Promise.all(
           enrollments.map(async (enrollment) => {
             try {
-              const courseResponse = await fetch(`${API_BASE_URL}/api/courses/${enrollment.courseId}`, {
+              const courseResponse = await fetch(`http://localhost:8080/api/courses/${enrollment.courseId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
               });
               
@@ -92,7 +118,7 @@ export default function StudentProfile() {
                 
                 // Try to get more accurate progress from progress endpoint
                 try {
-                  const progressResponse = await fetch(`${API_BASE_URL}/api/progress/courses/${enrollment.courseId}`, {
+                  const progressResponse = await fetch(`http://localhost:8080/api/progress/courses/${enrollment.courseId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                   });
                   if (progressResponse.ok) {
@@ -124,7 +150,7 @@ export default function StudentProfile() {
       }
       
       // Fetch certificates
-      const certsResponse = await fetch(`${API_BASE_URL}/api/certificates`, {
+      const certsResponse = await fetch('http://localhost:8080/api/certificates', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

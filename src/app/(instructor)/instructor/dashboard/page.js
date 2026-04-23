@@ -5,7 +5,7 @@ import InstructorNavbar from '@/landing_page/InstructorNavbar';
 import InstructorFooter from '@/landing_page/InstructorFooter';
 import { useState } from 'react';
 import {
-  Play, Monitor, Users, Trophy, BookOpen, Star, Edit, Plus, Trash2, Eye, UserPlus, GraduationCap, TrendingUp, Award, Clock, ChevronRight, X
+  Play, Monitor, Users, Trophy, BookOpen, Star, Edit, Plus, Trash2, Eye, UserPlus, GraduationCap, TrendingUp, Award, Clock
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -18,9 +18,6 @@ export default function InstructorDashboard() {
   const [userData, setUserData] = useState(null);
   const [myCourses, setMyCourses] = useState([]);
   const [allInstructors, setAllInstructors] = useState([]);
-  const [allStudents, setAllStudents] = useState([]);
-  const [showStudentsModal, setShowStudentsModal] = useState(false);
-  const [showInstructorsModal, setShowInstructorsModal] = useState(false);
   const [stats, setStats] = useState({
     totalMyCourses: 0,
     publishedCourses: 0,
@@ -56,14 +53,25 @@ export default function InstructorDashboard() {
       const token = localStorage.getItem('token');
       
       // Fetch user data
+      console.log('Fetching user data...');
       const userResponse = await fetch(`${API_BASE_URL}/api/users/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (userResponse.ok) {
         const user = await userResponse.json();
+        console.log('User data received:', user);
         setUserData(user);
         localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        console.error('Failed to fetch user data:', userResponse.status);
+        // Try to get from localStorage as fallback
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          console.log('Using stored user data:', parsedUser);
+          setUserData(parsedUser);
+        }
       }
       
       // Fetch instructor's courses
@@ -74,6 +82,7 @@ export default function InstructorDashboard() {
       let courses = [];
       if (coursesResponse.ok) {
         courses = await coursesResponse.json();
+        console.log('Courses received:', courses);
         
         // Fetch enrollment count for each course
         const coursesWithEnrollments = await Promise.all(
@@ -83,6 +92,16 @@ export default function InstructorDashboard() {
               
               if (course.studentsCount) studentCount = course.studentsCount;
               else if (course.enrolledCount) studentCount = course.enrolledCount;
+              
+              if (studentCount === 0) {
+                const enrollmentsResponse = await fetch(`${API_BASE_URL}/api/enrollments/course/${course.id}`, {
+                  headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (enrollmentsResponse.ok) {
+                  const enrollments = await enrollmentsResponse.json();
+                  studentCount = enrollments.length;
+                }
+              }
               
               if (studentCount === 0) {
                 const countResponse = await fetch(`${API_BASE_URL}/api/enrollments/course/${course.id}/count`, {
@@ -112,38 +131,23 @@ export default function InstructorDashboard() {
       const publishedCourses = courses?.filter(c => c.published === true).length || 0;
       
       let totalStudentsEnrolled = 0;
-      courses?.forEach(course => {
+      const coursesWithCounts = myCourses.length > 0 ? myCourses : courses;
+      coursesWithCounts?.forEach(course => {
         totalStudentsEnrolled += course.studentCount || 0;
       });
       
-      // Fetch all instructors
       let instructorsCount = 0;
-      let instructorsList = [];
       try {
         const instructorsResponse = await fetch(`${API_BASE_URL}/api/users/instructors`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (instructorsResponse.ok) {
-          instructorsList = await instructorsResponse.json();
-          setAllInstructors(instructorsList || []);
-          instructorsCount = instructorsList?.length || 0;
+          const instructors = await instructorsResponse.json();
+          setAllInstructors(instructors || []);
+          instructorsCount = instructors?.length || 0;
         }
       } catch (err) {
         console.error('Failed to fetch instructors:', err);
-      }
-      
-      // Fetch all students
-      let studentsList = [];
-      try {
-        const studentsResponse = await fetch(`${API_BASE_URL}/api/users/students`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (studentsResponse.ok) {
-          studentsList = await studentsResponse.json();
-          setAllStudents(studentsList || []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch students:', err);
       }
       
       setStats({
@@ -238,10 +242,6 @@ export default function InstructorDashboard() {
     }
   };
 
-  const handleCourseClick = (courseId) => {
-    router.push(`/instructor/instructorcourses/${courseId}`);
-  };
-
   const StarRow = ({ count, filled }) => (
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
@@ -266,6 +266,8 @@ export default function InstructorDashboard() {
     );
   }
 
+  // Get the actual name from userData (what they signed up with)
+  // Check multiple possible fields where the name could be stored
   const displayName = userData?.name || userData?.fullName || userData?.username || 'Instructor';
   const userEmail = userData?.email || '';
   const userRole = userData?.role || 'Instructor';
@@ -277,6 +279,10 @@ export default function InstructorDashboard() {
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   })();
+
+  // Debug log to see what userData contains
+  console.log('UserData in dashboard:', userData);
+  console.log('Display name:', displayName);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -299,7 +305,7 @@ export default function InstructorDashboard() {
 
         <main className="flex-1 p-3 sm:p-5 lg:p-6 space-y-4 sm:space-y-5">
 
-          {/* Welcome Section */}
+          {/* Welcome Section with Dynamic Name */}
           <div className="mb-2">
             <h1 className="text-2xl font-bold text-gray-900">
               {greeting}, {displayName}! 👋
@@ -333,39 +339,29 @@ export default function InstructorDashboard() {
               </div>
             </div>
             
-            {/* Total Students - Clickable */}
-            <button
-              onClick={() => setShowStudentsModal(true)}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-all text-left group"
-            >
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
                   <Users size={20} className="text-purple-500" />
                 </div>
-                <div className="flex-1">
+                <div>
                   <p className="font-extrabold text-gray-900 text-2xl">{stats.totalStudentsEnrolled}</p>
                   <p className="text-gray-400 text-xs">Total Students</p>
                 </div>
-                <ChevronRight size={16} className="text-gray-400 group-hover:text-purple-500" />
               </div>
-            </button>
+            </div>
             
-            {/* Total Instructors - Clickable */}
-            <button
-              onClick={() => setShowInstructorsModal(true)}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-all text-left group"
-            >
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center group-hover:bg-yellow-100 transition-colors">
+                <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center">
                   <GraduationCap size={20} className="text-yellow-500" />
                 </div>
-                <div className="flex-1">
+                <div>
                   <p className="font-extrabold text-gray-900 text-2xl">{stats.totalInstructors}</p>
                   <p className="text-gray-400 text-xs">Instructors</p>
                 </div>
-                <ChevronRight size={16} className="text-gray-400 group-hover:text-yellow-500" />
               </div>
-            </button>
+            </div>
           </div>
 
           {/* ── Profile Completion Banner ── */}
@@ -401,11 +397,7 @@ export default function InstructorDashboard() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {myCourses.map((course) => (
-                  <div 
-                    key={course.id} 
-                    className="p-4 sm:p-5 hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => handleCourseClick(course.id)}
-                  >
+                  <div key={course.id} className="p-4 sm:p-5 hover:bg-gray-50 transition-colors">
                     <div className="flex flex-col sm:flex-row gap-4">
                       <img 
                         src={course.thumbnailUrl || course.thumbnail || 'https://via.placeholder.com/600x400?text=Course+Image'} 
@@ -419,13 +411,16 @@ export default function InstructorDashboard() {
                             <h3 className="font-semibold text-gray-900 mb-1">{course.title}</h3>
                             <p className="text-xs text-gray-500 line-clamp-2">{course.description}</p>
                           </div>
-                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            <Link href={`/instructor/instructorcourses/${course.id}`} className="p-2 text-gray-500 hover:text-blue-600 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <Link href={`/instructor/courses/${course.id}/edit`} className="p-2 text-gray-500 hover:text-blue-600 transition-colors">
                               <Edit size={16} />
                             </Link>
                             <button onClick={(e) => handleDeleteCourse(course.id, e)} className="p-2 text-gray-500 hover:text-red-600 transition-colors">
                               <Trash2 size={16} />
                             </button>
+                            <Link href={`/courses/${course.id}`} target="_blank" className="p-2 text-gray-500 hover:text-green-600 transition-colors">
+                              <Eye size={16} />
+                            </Link>
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-4 mt-3">
