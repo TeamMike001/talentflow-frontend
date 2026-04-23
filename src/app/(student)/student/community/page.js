@@ -12,7 +12,7 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import EmojiPicker from 'emoji-picker-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://talentflow-backend-9hue.onrender.com';
 
 export default function CommunityPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -48,31 +48,89 @@ export default function CommunityPage() {
   const messageRefs = useRef({});
   const router = useRouter();
 
-  // Group messages by date for better organization
-  const groupMessagesByDate = (messages) => {
-    const groups = {};
-    messages.forEach(message => {
-      const date = new Date(message.timestamp);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      let dateLabel;
-      if (date.toDateString() === today.toDateString()) {
-        dateLabel = 'Today';
-      } else if (date.toDateString() === yesterday.toDateString()) {
-        dateLabel = 'Yesterday';
+  // ============================================
+  // HELPER FUNCTIONS FOR DATE HANDLING
+  // ============================================
+  
+  const getValidDate = (timestamp) => {
+    if (!timestamp) return new Date();
+    
+    try {
+      let date;
+      if (typeof timestamp === 'number') {
+        date = new Date(timestamp);
+      } else if (typeof timestamp === 'string') {
+        date = new Date(timestamp);
+        if (isNaN(date.getTime())) {
+          const num = parseInt(timestamp);
+          if (!isNaN(num)) {
+            date = new Date(num);
+          }
+        }
+      } else if (timestamp instanceof Date) {
+        date = timestamp;
       } else {
-        dateLabel = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        date = new Date();
       }
       
-      if (!groups[dateLabel]) {
-        groups[dateLabel] = [];
+      return isNaN(date.getTime()) ? new Date() : date;
+    } catch (e) {
+      console.error('Date parsing error:', e);
+      return new Date();
+    }
+  };
+
+  const getDateHeader = (timestamp) => {
+    const date = getValidDate(timestamp);
+    
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+    const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    if (messageDate.getTime() === todayDate.getTime()) {
+      return 'Today';
+    } else if (messageDate.getTime() === yesterdayDate.getTime()) {
+      return 'Yesterday';
+    } else {
+      const options = { month: 'short', day: 'numeric' };
+      if (date.getFullYear() !== today.getFullYear()) {
+        options.year = 'numeric';
       }
-      groups[dateLabel].push(message);
+      return date.toLocaleDateString('en-US', options);
+    }
+  };
+
+  const formatMessageTime = (timestamp) => {
+    const date = getValidDate(timestamp);
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit'
     });
+  };
+
+  const groupMessagesByDate = (messagesList) => {
+    const groups = {};
+    
+    messagesList.forEach(message => {
+      const timestamp = message.timestamp || message.createdAt || Date.now();
+      const dateHeader = getDateHeader(timestamp);
+      
+      if (!groups[dateHeader]) {
+        groups[dateHeader] = [];
+      }
+      groups[dateHeader].push(message);
+    });
+    
     return groups;
   };
+
+  // ============================================
+  // INITIALIZATION
+  // ============================================
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -109,14 +167,12 @@ export default function CommunityPage() {
     }
   }, [selectedUser]);
 
-  // Auto-scroll to bottom for new messages
   useEffect(() => {
     if (messagesEndRef.current && !scrollToMessageId) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
-  // Scroll to mentioned message
   useEffect(() => {
     if (scrollToMessageId && messageRefs.current[scrollToMessageId]) {
       setHighlightedMessageId(scrollToMessageId);
@@ -125,7 +181,6 @@ export default function CommunityPage() {
         block: 'center' 
       });
       
-      // Remove highlight after 3 seconds
       setTimeout(() => {
         setHighlightedMessageId(null);
       }, 3000);
@@ -140,73 +195,9 @@ export default function CommunityPage() {
     }
   }, [notification]);
 
-  const scrollToMessage = (messageId) => {
-    setActiveTab('community');
-    setSelectedUser(null);
-    setScrollToMessageId(messageId);
-    // Remove highlight from URL
-    window.history.pushState({}, '', window.location.pathname);
-  };
-
-  const formatMessageDate = (timestamp) => {
-    if (!timestamp) return 'Unknown date';
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return 'Invalid date';
-    
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const diffDays = Math.floor((today - msgDate) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-      return 'Today';
-    } else if (diffDays === 1) {
-      return 'Yesterday';
-    } else if (diffDays < 7) {
-      return date.toLocaleDateString('en-US', { weekday: 'long' });
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-  };
-
-  const formatMessageTime = (timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return '';
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setInput(value);
-    
-    const lastAtSymbol = value.lastIndexOf('@');
-    if (lastAtSymbol !== -1 && lastAtSymbol === value.length - 1) {
-      setShowUserMentions(true);
-      setMentionSearch('');
-      setMentionIndex(-1);
-    } else if (showUserMentions) {
-      const textAfterAt = value.substring(lastAtSymbol + 1);
-      setMentionSearch(textAfterAt);
-    } else {
-      setShowUserMentions(false);
-    }
-  };
-
-  const insertMention = (user) => {
-    const lastAtSymbol = input.lastIndexOf('@');
-    const newInput = input.substring(0, lastAtSymbol) + `@${user.name} `;
-    setInput(newInput);
-    setShowUserMentions(false);
-    setMentionSearch('');
-    inputRef.current?.focus();
-  };
-
-  const filteredMentions = allUsers.filter(user => 
-    user.id !== currentUser?.id &&
-    user.role === 'STUDENT' &&
-    user.name?.toLowerCase().includes(mentionSearch.toLowerCase())
-  ).slice(0, 5);
+  // ============================================
+  // WEBSOCKET CONNECTION
+  // ============================================
 
   const connectWebSocket = () => {
     const token = localStorage.getItem('token');
@@ -227,15 +218,14 @@ export default function CommunityPage() {
       client.subscribe('/topic/group', (message) => {
         try {
           const msg = JSON.parse(message.body);
-          console.log('📨 Received community message:', msg);
           
           const isSelf = msg.senderId === currentUser?.id;
+          const now = Date.now();
           
-          // Show notification for mentions
           if (!isSelf && msg.taggedUsers?.includes(currentUser?.email)) {
             setNotification({
               type: 'mention',
-              message: `${msg.senderName} mentioned you: "${msg.content.substring(0, 50)}${msg.content.length > 50 ? '...' : ''}"`,
+              message: `${msg.senderName} mentioned you: "${msg.content?.substring(0, 50)}${msg.content?.length > 50 ? '...' : ''}"`,
               messageId: msg.id
             });
           }
@@ -248,7 +238,8 @@ export default function CommunityPage() {
             const exists = prev.some(m => m.id === msg.id);
             if (exists) return prev;
             
-            const timestamp = msg.timestamp;
+            const timestamp = msg.timestamp || now;
+            
             const newMessage = {
               id: msg.id,
               senderId: msg.senderId,
@@ -260,14 +251,13 @@ export default function CommunityPage() {
               messageType: msg.messageType || 'text',
               taggedUsers: msg.taggedUsers || [],
               timestamp: timestamp,
+              createdAt: timestamp,
               time: formatMessageTime(timestamp),
-              dateLabel: formatMessageDate(timestamp),
-              fullDate: new Date(timestamp),
               self: isSelf
             };
             
             const updated = [...prev, newMessage];
-            updated.sort((a, b) => a.timestamp - b.timestamp);
+            updated.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
             return updated;
           });
         } catch (e) {
@@ -278,10 +268,10 @@ export default function CommunityPage() {
       client.subscribe('/user/queue/private', (message) => {
         try {
           const msg = JSON.parse(message.body);
-          console.log('📨 Received private message:', msg);
           
           const senderId = msg.senderId;
           const isSelf = msg.senderId === currentUser?.id;
+          const now = Date.now();
           
           if (!isSelf && selectedUser?.id !== senderId) {
             setUnreadDirect(prev => ({ ...prev, [senderId]: true }));
@@ -299,9 +289,8 @@ export default function CommunityPage() {
                   content: msg.content,
                   fileUrl: msg.fileUrl,
                   messageType: msg.messageType || 'text',
-                  timestamp: msg.timestamp,
-                  time: formatMessageTime(msg.timestamp),
-                  dateLabel: formatMessageDate(msg.timestamp),
+                  timestamp: msg.timestamp || now,
+                  time: formatMessageTime(msg.timestamp || now),
                   self: false
                 }]
               };
@@ -309,7 +298,7 @@ export default function CommunityPage() {
             
             if (selectedUser?.id === senderId) {
               setMessages(prev => {
-                const timestamp = msg.timestamp;
+                const timestamp = msg.timestamp || now;
                 const newMessage = {
                   id: msg.id,
                   senderId: msg.senderId,
@@ -321,13 +310,12 @@ export default function CommunityPage() {
                   messageType: msg.messageType || 'text',
                   taggedUsers: [],
                   timestamp: timestamp,
+                  createdAt: timestamp,
                   time: formatMessageTime(timestamp),
-                  dateLabel: formatMessageDate(timestamp),
-                  fullDate: new Date(timestamp),
                   self: false
                 };
                 const updated = [...prev, newMessage];
-                updated.sort((a, b) => a.timestamp - b.timestamp);
+                updated.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
                 return updated;
               });
             }
@@ -346,6 +334,10 @@ export default function CommunityPage() {
     client.activate();
     stompClientRef.current = client;
   };
+
+  // ============================================
+  // API CALLS
+  // ============================================
 
   const fetchAllUsers = async () => {
     try {
@@ -376,26 +368,27 @@ export default function CommunityPage() {
         const data = await response.json();
         const formattedMessages = data.map(msg => {
           const isSelf = msg.senderId === currentUser?.id;
-          const timestamp = msg.timestamp;
+          const timestamp = msg.timestamp || msg.createdAt || Date.now();
+          
           return {
             id: msg.id,
             senderId: msg.senderId,
-            senderName: msg.senderName,
+            senderName: msg.senderName || 'Unknown User',
             senderRole: msg.senderRole,
-            senderAvatar: msg.senderAvatar || `https://ui-avatars.com/api/?background=${isSelf ? '2563EB' : '16A34A'}&color=fff&name=${msg.senderName?.charAt(0) || 'U'}`,
+            senderAvatar: msg.senderAvatar || `https://ui-avatars.com/api/?background=${isSelf ? '2563EB' : '16A34A'}&color=fff&name=${(msg.senderName || 'U').charAt(0)}`,
             content: msg.content,
             fileUrl: msg.fileUrl,
             messageType: msg.messageType || 'text',
             taggedUsers: msg.taggedUsers || [],
             timestamp: timestamp,
+            createdAt: timestamp,
             time: formatMessageTime(timestamp),
-            dateLabel: formatMessageDate(timestamp),
-            fullDate: new Date(timestamp),
             self: isSelf
           };
         });
-        formattedMessages.sort((a, b) => a.timestamp - b.timestamp);
+        formattedMessages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
         setMessages(formattedMessages);
+        console.log('Fetched messages:', formattedMessages.length);
       }
     } catch (error) {
       console.error('Failed to fetch community messages:', error);
@@ -413,31 +406,35 @@ export default function CommunityPage() {
         const data = await response.json();
         const formattedMessages = data.map(msg => {
           const isSelf = msg.senderId === currentUser?.id;
-          const timestamp = msg.timestamp;
+          const timestamp = msg.timestamp || msg.createdAt || Date.now();
+          
           return {
             id: msg.id,
             senderId: msg.senderId,
-            senderName: msg.senderName,
+            senderName: msg.senderName || 'Unknown User',
             senderRole: msg.senderRole,
-            senderAvatar: `https://ui-avatars.com/api/?background=${isSelf ? '2563EB' : '16A34A'}&color=fff&name=${msg.senderName?.charAt(0) || 'U'}`,
+            senderAvatar: `https://ui-avatars.com/api/?background=${isSelf ? '2563EB' : '16A34A'}&color=fff&name=${(msg.senderName || 'U').charAt(0)}`,
             content: msg.content,
             fileUrl: msg.fileUrl,
             messageType: msg.messageType || 'text',
             taggedUsers: [],
             timestamp: timestamp,
+            createdAt: timestamp,
             time: formatMessageTime(timestamp),
-            dateLabel: formatMessageDate(timestamp),
-            fullDate: new Date(timestamp),
             self: isSelf
           };
         });
-        formattedMessages.sort((a, b) => a.timestamp - b.timestamp);
+        formattedMessages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
         setMessages(formattedMessages);
       }
     } catch (error) {
       console.error('Failed to fetch direct messages:', error);
     }
   };
+
+  // ============================================
+  // MESSAGE HANDLERS
+  // ============================================
 
   const uploadFile = async (file) => {
     const formData = new FormData();
@@ -477,7 +474,8 @@ export default function CommunityPage() {
     setSending(true);
     let fileUrl = null;
     let messageType = 'text';
-    let tempId = Date.now();
+    const tempId = Date.now();
+    const now = Date.now();
     
     try {
       if (selectedFile) {
@@ -497,8 +495,6 @@ export default function CommunityPage() {
         taggedUsers: taggedUsers
       };
       
-      const now = Date.now();
-      
       const tempMessage = {
         id: tempId,
         senderId: currentUser?.id,
@@ -510,16 +506,15 @@ export default function CommunityPage() {
         messageType: messageType,
         taggedUsers: taggedUsers,
         timestamp: now,
+        createdAt: now,
         time: formatMessageTime(now),
-        dateLabel: formatMessageDate(now),
-        fullDate: new Date(now),
         self: true,
         status: 'sending'
       };
       
       setMessages(prev => {
         const updated = [...prev, tempMessage];
-        updated.sort((a, b) => a.timestamp - b.timestamp);
+        updated.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
         return updated;
       });
       
@@ -559,7 +554,8 @@ export default function CommunityPage() {
     setSending(true);
     let fileUrl = null;
     let messageType = 'text';
-    let tempId = Date.now();
+    const tempId = Date.now();
+    const now = Date.now();
     
     try {
       if (selectedFile) {
@@ -577,8 +573,6 @@ export default function CommunityPage() {
         messageType: messageType
       };
       
-      const now = Date.now();
-      
       const tempMessage = {
         id: tempId,
         senderId: currentUser?.id,
@@ -589,16 +583,15 @@ export default function CommunityPage() {
         fileUrl: fileUrl,
         messageType: messageType,
         timestamp: now,
+        createdAt: now,
         time: formatMessageTime(now),
-        dateLabel: formatMessageDate(now),
-        fullDate: new Date(now),
         self: true,
         status: 'sending'
       };
       
       setMessages(prev => {
         const updated = [...prev, tempMessage];
-        updated.sort((a, b) => a.timestamp - b.timestamp);
+        updated.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
         return updated;
       });
       
@@ -664,6 +657,43 @@ export default function CommunityPage() {
     }
   };
 
+  // ============================================
+  // UI HANDLERS
+  // ============================================
+
+  const scrollToMessage = (messageId) => {
+    setActiveTab('community');
+    setSelectedUser(null);
+    setScrollToMessageId(messageId);
+    window.history.pushState({}, '', window.location.pathname);
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setInput(value);
+    
+    const lastAtSymbol = value.lastIndexOf('@');
+    if (lastAtSymbol !== -1 && lastAtSymbol === value.length - 1) {
+      setShowUserMentions(true);
+      setMentionSearch('');
+      setMentionIndex(-1);
+    } else if (showUserMentions) {
+      const textAfterAt = value.substring(lastAtSymbol + 1);
+      setMentionSearch(textAfterAt);
+    } else {
+      setShowUserMentions(false);
+    }
+  };
+
+  const insertMention = (user) => {
+    const lastAtSymbol = input.lastIndexOf('@');
+    const newInput = input.substring(0, lastAtSymbol) + `@${user.name} `;
+    setInput(newInput);
+    setShowUserMentions(false);
+    setMentionSearch('');
+    inputRef.current?.focus();
+  };
+
   const handleEmojiClick = (emojiObject) => {
     setInput(prev => prev + emojiObject.emoji);
     setShowEmojiPicker(false);
@@ -696,6 +726,10 @@ export default function CommunityPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  // ============================================
+  // RENDER HELPERS
+  // ============================================
+
   const renderMessageContent = (msg) => {
     if (msg.messageType === 'image' && msg.fileUrl) {
       return (
@@ -721,8 +755,7 @@ export default function CommunityPage() {
       );
     }
     
-    // Process mentions in the content - make them clickable
-    let content = msg.content;
+    let content = msg.content || '';
     const mentionRegex = /@(\w+(?:\s+\w+)*)/g;
     const mentionMatches = content.match(mentionRegex);
     
@@ -766,7 +799,7 @@ export default function CommunityPage() {
   const getUserRoleText = (role) => {
     if (role === 'INSTRUCTOR') return 'Instructor';
     if (role === 'STUDENT') return 'Student';
-    return role;
+    return role || 'Member';
   };
 
   const filteredUsers = allUsers.filter(user =>
@@ -774,7 +807,17 @@ export default function CommunityPage() {
     user.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const filteredMentions = allUsers.filter(user => 
+    user.id !== currentUser?.id &&
+    user.role === 'STUDENT' &&
+    user.name?.toLowerCase().includes(mentionSearch.toLowerCase())
+  ).slice(0, 5);
+
   const groupedMessages = groupMessagesByDate(messages);
+
+  // ============================================
+  // LOADING STATE
+  // ============================================
 
   if (loading) {
     return (
@@ -786,6 +829,10 @@ export default function CommunityPage() {
       </div>
     );
   }
+
+  // ============================================
+  // MAIN RENDER
+  // ============================================
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -801,9 +848,7 @@ export default function CommunityPage() {
               className="bg-blue-600 text-white rounded-lg shadow-lg p-4 max-w-sm flex items-start gap-3 cursor-pointer hover:bg-blue-700 transition-colors"
               onClick={() => scrollToMessage(notification.messageId)}
             >
-              <div className="flex-shrink-0">
-                <BellRing size={20} />
-              </div>
+              <BellRing size={20} />
               <div className="flex-1">
                 <p className="font-semibold text-sm">You were mentioned</p>
                 <p className="text-xs text-blue-100">{notification.message}</p>
@@ -887,8 +932,8 @@ export default function CommunityPage() {
               </button>
             </div>
 
-            {/* Messages Area - WhatsApp Style (Sender Right, Receiver Left, No Duplicate) */}
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-4">
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
               {activeTab === 'direct' && !selectedUser ? (
                 <div className="text-center py-20">
                   <MessageCircle size={48} className="mx-auto mb-4 text-gray-300" />
@@ -900,65 +945,84 @@ export default function CommunityPage() {
                   <p className="text-gray-500">No messages yet. Start the conversation!</p>
                 </div>
               ) : (
-                Object.entries(groupedMessages).map(([dateLabel, dateMessages]) => (
-                  <div key={dateLabel}>
+                Object.entries(groupedMessages).map(([dateHeader, dateMessages]) => (
+                  <div key={dateHeader}>
+                    {/* Date Header */}
                     <div className="flex justify-center my-4">
                       <span className="text-xs text-gray-500 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
-                        {dateLabel}
+                        {dateHeader}
                       </span>
                     </div>
-                    {dateMessages.map((msg) => (
-                      <div 
-                        key={msg.id} 
-                        ref={el => messageRefs.current[msg.id] = el}
-                        className={`flex ${msg.self ? 'justify-end' : 'justify-start'} mb-3 transition-all duration-300 ${
-                          highlightedMessageId === msg.id ? 'bg-yellow-100 rounded-lg py-2 px-1 -mx-1' : ''
-                        }`}
-                      >
-                        <div className={`max-w-[75%] ${msg.self ? 'items-end' : 'items-start'}`}>
-                          {/* Sender name - only for non-self messages */}
-                          {!msg.self && (
-                            <div className="flex items-center gap-2 mb-1 ml-2">
-                              <img 
-                                src={msg.senderAvatar} 
-                                alt={msg.senderName} 
-                                className="w-5 h-5 rounded-full object-cover" 
-                              />
-                              <p className="text-xs font-medium text-gray-600">
-                                {msg.senderName} • <span className="text-gray-400">{getUserRoleText(msg.senderRole)}</span>
-                              </p>
-                            </div>
-                          )}
-                          
-                          {/* Message bubble - WhatsApp style */}
-                          <div className={`relative px-4 py-2 rounded-2xl ${
-                            msg.self 
-                              ? 'bg-[#dcf8c5] text-gray-800 rounded-br-md' 
-                              : 'bg-white text-gray-800 rounded-bl-md shadow-sm'
-                          }`}>
-                            {renderMessageContent(msg)}
-                            
-                            {/* Timestamp and status */}
-                            <div className={`flex items-center justify-end gap-1 mt-1 ${
-                              msg.self ? 'text-gray-500' : 'text-gray-400'
-                            }`}>
-                              <span className="text-[10px]">{msg.time}</span>
-                              {msg.self && msg.status === 'sent' && <Check size={10} className="text-gray-500" />}
-                              {msg.self && msg.status === 'sending' && <Clock size={10} className="text-gray-500" />}
+                    
+                    {/* Messages for this date */}
+                    <div className="space-y-3">
+                      {dateMessages.map((msg, idx) => {
+                        const prevMsg = idx > 0 ? dateMessages[idx - 1] : null;
+                        const showSenderInfo = !msg.self && (!prevMsg || prevMsg.senderId !== msg.senderId);
+                        
+                        return (
+                          <div 
+                            key={msg.id} 
+                            ref={el => messageRefs.current[msg.id] = el}
+                            className={`flex ${msg.self ? 'justify-end' : 'justify-start'} transition-all duration-300 ${
+                              highlightedMessageId === msg.id ? 'bg-yellow-100 rounded-lg py-2 px-1 -mx-1' : ''
+                            }`}
+                          >
+                            <div className={`max-w-[75%] ${msg.self ? 'items-end' : 'items-start'}`}>
+                              {/* Sender name and avatar */}
+                              {!msg.self && (
+                                <div className="flex items-center gap-2 mb-1 ml-2">
+                                  {showSenderInfo && (
+                                    <>
+                                      <img 
+                                        src={msg.senderAvatar} 
+                                        alt={msg.senderName} 
+                                        className="w-6 h-6 rounded-full object-cover" 
+                                      />
+                                      <p className="text-xs font-medium text-gray-600">
+                                        {msg.senderName || 'Unknown User'}
+                                        {msg.senderRole && (
+                                          <span className="text-gray-400 ml-1">
+                                            • {getUserRoleText(msg.senderRole)}
+                                          </span>
+                                        )}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {/* Message bubble */}
+                              <div className={`relative px-4 py-2 rounded-2xl ${
+                                msg.self 
+                                  ? 'bg-[#dcf8c5] text-gray-800 rounded-br-md' 
+                                  : 'bg-white text-gray-800 rounded-bl-md shadow-sm'
+                              }`}>
+                                {renderMessageContent(msg)}
+                                
+                                {/* Timestamp and status */}
+                                <div className={`flex items-center justify-end gap-1 mt-1 ${
+                                  msg.self ? 'text-gray-500' : 'text-gray-400'
+                                }`}>
+                                  <span className="text-[10px]">{msg.time}</span>
+                                  {msg.self && msg.status === 'sent' && <Check size={10} className="text-gray-500" />}
+                                  {msg.self && msg.status === 'sending' && <Clock size={10} className="text-gray-500 animate-pulse" />}
+                                </div>
+                              </div>
+                              
+                              {/* Mention indicator */}
+                              {msg.taggedUsers && msg.taggedUsers.includes(currentUser?.email) && !msg.self && (
+                                <div className="mt-1 ml-2">
+                                  <span className="text-xs text-blue-600 inline-flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded-full">
+                                    <AtSign size={10} /> You were mentioned - click on your name to jump
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          
-                          {/* Mention indicator */}
-                          {msg.taggedUsers && msg.taggedUsers.includes(currentUser?.email) && !msg.self && (
-                            <div className="mt-1 ml-2">
-                              <span className="text-xs text-blue-600 inline-flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded-full">
-                                <AtSign size={10} /> You were mentioned - click on your name to jump
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      })}
+                    </div>
                   </div>
                 ))
               )}
@@ -966,7 +1030,7 @@ export default function CommunityPage() {
             </div>
 
             {/* Input Bar */}
-            <div className="px-3 sm:px-5 py-3 sm:py-4 bg-white relative">
+            <div className="px-3 sm:px-5 py-3 sm:py-4 bg-white relative border-t border-gray-100">
               {selectedFile && (
                 <div className="mb-2 p-2 bg-gray-100 rounded-lg flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -1115,7 +1179,7 @@ export default function CommunityPage() {
                           {user.name?.charAt(0) || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm truncate">{user.name}</p>
+                          <p className="font-medium text-gray-900 text-sm truncate">{user.name || 'Unknown User'}</p>
                           <p className="text-xs text-gray-500 truncate">{user.email}</p>
                           <p className="text-xs text-blue-600 mt-0.5">
                             {getUserRoleText(user.role)}
@@ -1154,7 +1218,7 @@ export default function CommunityPage() {
                           {user.name?.charAt(0) || 'U'}
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-gray-800 text-sm">{user.name}</p>
+                          <p className="font-medium text-gray-800 text-sm">{user.name || 'Unknown User'}</p>
                           <p className="text-xs text-gray-400">{getUserRoleText(user.role)}</p>
                         </div>
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
