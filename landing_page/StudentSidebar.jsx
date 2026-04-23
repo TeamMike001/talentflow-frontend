@@ -5,7 +5,7 @@
   import { useState, useEffect } from 'react';
   import {
     Home, User, BookOpen, Bookmark, Award,
-    ClipboardList, Headphones, Users, Settings, LogOut, X,
+    ClipboardList, Headphones, Users, Settings, LogOut, X, CalendarDays,
   } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -13,6 +13,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const navItems = [
     { icon: Home,          label: 'Home',           href: '/student/dashboard' },
     { icon: User,          label: 'Profile',         href: '/student/StudentProfile' },
+    { icon: CalendarDays,  label: 'Schedule',         href: '/student/schedule' },
     { icon: BookOpen,      label: 'Courses',         href: '/student/courses' },
     { icon: Bookmark,      label: 'Bookmarks',       href: '/student/bookmarks' },
     { icon: Award,         label: 'Certifications',  href: '/student/certifications' },
