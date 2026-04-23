@@ -1,28 +1,28 @@
 // src/app/admin/layout.js
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminNavbar from '@/components/admin/AdminNavbar';
 
 export default function AdminLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthorized, setIsAuthorized] = useState(false);
 
-  // Public routes that don't require authentication
   const publicRoutes = ['/admin/login', '/admin/register'];
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-    // Allow access to public routes without auth
     if (publicRoutes.includes(pathname)) {
       setIsAuthorized(true);
       return;
     }
 
-    // For dashboard and other admin routes, require auth and admin role
     if (!token || user.role !== 'ADMIN') {
       router.push('/admin/login');
     } else {
@@ -38,5 +38,20 @@ export default function AdminLayout({ children }) {
     );
   }
 
-  return <>{children}</>;
+  // For login/register pages, just render children without sidebar
+  if (publicRoutes.includes(pathname)) {
+    return <>{children}</>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AdminSidebar />
+      <div className="lg:ml-64 flex flex-col min-h-screen">
+        <AdminNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        <main className="flex-1 p-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 }

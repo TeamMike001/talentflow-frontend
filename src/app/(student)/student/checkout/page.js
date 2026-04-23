@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Navbar from '@/landing_page/StudentNavbar';
+import Navbar from '@/landing_page/Navbar';
 import Footer from '@/landing_page/Footer';
 import Link from 'next/link';
 import { CreditCard } from 'lucide-react';

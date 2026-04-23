@@ -1,9 +1,11 @@
+// src/app/(auth)/signup/page.js
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, Check } from 'lucide-react';
+import { Eye, EyeOff, Check, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24">
@@ -14,13 +16,6 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const LinkedInIcon = () => (
-  <svg width="18" height="18" fill="#0A66C2" viewBox="0 0 24 24">
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-  </svg>
-);
-
-/* ── Instructor SVG illustration ── */
 const InstructorIllustration = () => (
   <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
     <rect width="52" height="52" rx="14" fill="#EFF6FF"/>
@@ -36,7 +31,6 @@ const InstructorIllustration = () => (
   </svg>
 );
 
-/* ── Student SVG illustration ── */
 const StudentIllustration = () => (
   <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
     <rect width="52" height="52" rx="14" fill="#F0FDF4"/>
@@ -59,7 +53,6 @@ const roles = [
     illustration: <InstructorIllustration />,
     accent: 'border-primary bg-blue-50',
     checkColor: 'bg-primary',
-    redirect: '/instructor/create-course',
   },
   {
     id: 'student',
@@ -69,60 +62,116 @@ const roles = [
     illustration: <StudentIllustration />,
     accent: 'border-green-500 bg-green-50',
     checkColor: 'bg-green-500',
-    redirect: '/student/dashboard',
   },
 ];
 
+const securityQuestions = [
+  "What is your mother's maiden name?",
+  "What was your first pet's name?",
+  "What city were you born in?",
+  "What was your first school?",
+  "What is your favorite book?",
+  "What is your father's middle name?",
+  "What was the name of your first teacher?",
+  "What is your favorite movie?",
+];
+
 export default function SignUpPage() {
+  const [step, setStep] = useState(1);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [role, setRole] = useState('instructor');
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
-  const router = useRouter();
+  const [role, setRole] = useState('student');
+  const [form, setForm] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [securityAnswers, setSecurityAnswers] = useState({
+    question1: securityQuestions[0],
+    answer1: '',
+    question2: securityQuestions[1],
+    answer2: '',
+    question3: securityQuestions[2],
+    answer3: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
+  const router = useRouter();
   const selectedRole = roles.find(r => r.id === role);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // src/app/(auth)/signup/page.js - Update the handleSubmit for step 2
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (step === 1) {
     if (form.password !== form.confirmPassword) {
-      alert('Passwords do not match!');
+      setError("Passwords do not match!");
       return;
     }
-    router.push(selectedRole.redirect);
-  };
+    if (form.password.length < 6) {
+      setError("Password must be at least 6 characters!");
+      return;
+    }
+    setError('');
+    setStep(2);
+    return;
+  }
+  
+  // Step 2: Submit registration with security questions
+  setLoading(true);
+  setError('');
 
-  const inputClass =
-    'w-full px-4 py-3 border border-blue-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white';
+  try {
+    const response = await authService.register(
+      form.fullName,
+      form.email,
+      form.password,
+      role.toUpperCase(),
+      securityAnswers
+    );
+
+    // Check if response has token (successful registration)
+    if (response.token && response.user) {
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      const redirectPath = role === 'student' ? '/student/dashboard' : '/instructor/dashboard';
+      router.push(redirectPath);
+    } else if (response.error) {
+      setError(response.error);
+    } else {
+      setError('Registration failed. Please try again.');
+    }
+  } catch (err) {
+    console.error('Registration error:', err);
+    setError(err.message || 'Registration failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+  const inputClass = 'w-full px-4 py-3 border border-blue-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white';
 
   return (
     <main className="min-h-screen flex">
-
-      {/* ── LEFT – Blue Panel ── */}
       <div className="hidden lg:flex lg:w-5/12 bg-primary flex-col items-center justify-between py-16 px-12 text-white text-center">
         <div />
         <div>
           <h1 className="text-5xl font-bold mb-6 leading-tight">Hey There!</h1>
           <p className="text-xl leading-relaxed text-white/90">Welcome to TalentFlow.</p>
-          <p className="text-xl leading-relaxed text-white/90">
-            You are just one step away to your feed.
-          </p>
+          <p className="text-xl leading-relaxed text-white/90">You are just one step away to your feed.</p>
         </div>
         <div className="text-center">
           <p className="text-white/80 text-base mb-4">Already have an account?</p>
-          <Link
-            href="/signin"
-            className="inline-block px-10 py-3 bg-white text-primary font-bold rounded-xl hover:bg-blue-50 transition-all text-sm"
-          >
+          <Link href="/signin" className="inline-block px-10 py-3 bg-white text-primary font-bold rounded-xl hover:bg-blue-50 transition-all text-sm">
             Sign in
           </Link>
         </div>
       </div>
 
-      {/* ── RIGHT – Form Panel ── */}
       <div className="w-full lg:w-7/12 flex items-center justify-center px-8 py-12 bg-white overflow-y-auto">
         <div className="w-full max-w-lg">
-
-          {/* Mobile switch */}
           <div className="lg:hidden mb-8 text-center">
             <p className="text-gray-500 text-sm">
               Already have an account?{' '}
@@ -130,158 +179,244 @@ export default function SignUpPage() {
             </p>
           </div>
 
-          <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Create an account</h1>
+          {/* Progress Steps */}
+          <div className="flex mb-8">
+            <div className="flex-1 text-center">
+              <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center text-sm font-semibold ${
+                step >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
+              }`}>
+                1
+              </div>
+              <p className="text-xs mt-1 text-gray-500">Account Info</p>
+            </div>
+            <div className="flex-1 text-center">
+              <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center text-sm font-semibold ${
+                step >= 2 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
+              }`}>
+                2
+              </div>
+              <p className="text-xs mt-1 text-gray-500">Security</p>
+            </div>
+          </div>
+
+          <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
+            {step === 1 ? 'Create an account' : 'Security Questions'}
+          </h1>
           <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-            Access your Results, Notes, Assignments, and Courses anytime, anywhere
-            and keep everything flowing in one place.
+            {step === 1 
+              ? 'Access your Results, Notes, Assignments, and Courses anytime, anywhere.'
+              : 'Set up security questions to recover your password if forgotten.'}
           </p>
 
-          {/* ── ROLE SELECTOR ── */}
-          <div className="mb-6">
-            <p className="text-sm font-semibold text-gray-700 mb-3">I want to join as a:</p>
-            <div className="grid grid-cols-2 gap-3">
-              {roles.map((r) => {
-                const isActive = role === r.id;
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setRole(r.id)}
-                    className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 text-center group
-                      ${isActive
-                        ? r.accent + ' shadow-md scale-[1.02]'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-                      }`}
+          {step === 1 && (
+            <>
+              <div className="mb-6">
+                <p className="text-sm font-semibold text-gray-700 mb-3">I want to join as a:</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {roles.map((r) => {
+                    const isActive = role === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setRole(r.id)}
+                        className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 text-center group ${
+                          isActive ? r.accent + ' shadow-md scale-[1.02]' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                          isActive ? r.checkColor + ' opacity-100 scale-100' : 'bg-gray-200 opacity-0 scale-75'
+                        }`}>
+                          <Check size={11} className="text-white" strokeWidth={3} />
+                        </div>
+                        <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100 group-hover:scale-105'}`}>
+                          {r.illustration}
+                        </div>
+                        <div>
+                          <p className={`font-extrabold text-sm transition-colors ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
+                            {r.label}
+                          </p>
+                          <p className={`text-xs mt-0.5 font-medium transition-colors ${isActive ? (r.id === 'instructor' ? 'text-primary' : 'text-green-600') : 'text-gray-400'}`}>
+                            {r.description}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  required
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  className={inputClass}
+                />
+
+                <input
+                  type="email"
+                  placeholder="Email"
+                  required
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className={inputClass}
+                />
+
+                <div className="relative">
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    placeholder="Password"
+                    required
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    className={`${inputClass} pr-12`}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPass(!showPass)} 
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {/* Check badge */}
-                    <div className={`absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${
-                      isActive ? r.checkColor + ' opacity-100 scale-100' : 'bg-gray-200 opacity-0 scale-75'
-                    }`}>
-                      <Check size={11} className="text-white" strokeWidth={3} />
-                    </div>
-
-                    {/* Illustration */}
-                    <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100 group-hover:scale-105'}`}>
-                      {r.illustration}
-                    </div>
-
-                    {/* Labels */}
-                    <div>
-                      <p className={`font-extrabold text-sm transition-colors ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
-                        {r.label}
-                      </p>
-                      <p className={`text-xs mt-0.5 font-medium transition-colors ${
-                        isActive
-                          ? r.id === 'instructor' ? 'text-primary' : 'text-green-600'
-                          : 'text-gray-400'
-                      }`}>
-                        {r.description}
-                      </p>
-                    </div>
-
-                    {/* Active bottom bar */}
-                    <div className={`absolute bottom-0 left-4 right-4 h-0.5 rounded-full transition-all duration-300 ${
-                      isActive
-                        ? r.id === 'instructor' ? 'bg-primary opacity-100' : 'bg-green-500 opacity-100'
-                        : 'opacity-0'
-                    }`} />
+                    {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
-                );
-              })}
-            </div>
+                </div>
 
-            {/* Confirmation pill */}
-            <div className="mt-3 text-center">
-              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-300 ${
-                role === 'instructor' ? 'bg-blue-50 text-primary' : 'bg-green-50 text-green-600'
-              }`}>
-                <Check size={11} strokeWidth={3} />
-                Registering as: <span className="font-extrabold">{selectedRole?.sublabel}</span>
-              </span>
-            </div>
-          </div>
+                <div className="relative">
+                  <input
+                    type={showConfirm ? 'text' : 'password'}
+                    placeholder="Confirm Password"
+                    required
+                    value={form.confirmPassword}
+                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                    className={`${inputClass} pr-12`}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowConfirm(!showConfirm)} 
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
 
-          {/* ── FORM ── */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Full Name"
-              required
-              value={form.fullName}
-              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              className={inputClass}
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              required
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={inputClass}
-            />
+                <button
+                  type="submit"
+                  className="w-full py-3.5 bg-primary text-white font-bold rounded-xl transition-all text-sm shadow-md hover:shadow-lg"
+                >
+                  Continue to Security
+                </button>
+              </form>
+            </>
+          )}
 
-            {/* Password */}
-            <div className="relative">
-              <input
-                type={showPass ? 'text' : 'password'}
-                placeholder="Password"
-                required
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className={`${inputClass} pr-12`}
-              />
+          {step === 2 && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="bg-blue-50 p-4 rounded-xl mb-2">
+                <div className="flex items-center gap-2 text-blue-600 mb-2">
+                  <Shield size={18} />
+                  <span className="font-semibold text-sm">Password Recovery Questions</span>
+                </div>
+                <p className="text-xs text-blue-600">These will be used to recover your password if forgotten.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Security Question 1</label>
+                <select
+                  value={securityAnswers.question1}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, question1: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm mb-2"
+                >
+                  {securityQuestions.map((q) => (
+                    <option key={q} value={q}>{q}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Your answer"
+                  required
+                  value={securityAnswers.answer1}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, answer1: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Security Question 2</label>
+                <select
+                  value={securityAnswers.question2}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, question2: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm mb-2"
+                >
+                  {securityQuestions.filter(q => q !== securityAnswers.question1).map((q) => (
+                    <option key={q} value={q}>{q}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Your answer"
+                  required
+                  value={securityAnswers.answer2}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, answer2: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Security Question 3</label>
+                <select
+                  value={securityAnswers.question3}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, question3: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm mb-2"
+                >
+                  {securityQuestions.filter(q => q !== securityAnswers.question1 && q !== securityAnswers.question2).map((q) => (
+                    <option key={q} value={q}>{q}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Your answer"
+                  required
+                  value={securityAnswers.answer3}
+                  onChange={(e) => setSecurityAnswers({ ...securityAnswers, answer3: e.target.value })}
+                  className="w-full px-4 py-3 border border-blue-200 rounded-xl text-sm"
+                />
+              </div>
+
               <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                type="submit"
+                disabled={loading}
+                className={`w-full py-3.5 text-white font-bold rounded-xl transition-all text-sm shadow-md hover:shadow-lg ${
+                  role === 'student' ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-blue-700'
+                } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                {loading ? 'Creating account...' : `Sign up as ${selectedRole?.sublabel}`}
               </button>
-            </div>
+            </form>
+          )}
 
-            {/* Confirm Password */}
-            <div className="relative">
-              <input
-                type={showConfirm ? 'text' : 'password'}
-                placeholder="Confirm Password"
-                required
-                value={form.confirmPassword}
-                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                className={`${inputClass} pr-12`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-
-            {/* Submit — colour reflects role */}
-            <button
-              type="submit"
-              className={`w-full py-3.5 text-white font-bold rounded-xl transition-all text-sm shadow-md hover:shadow-lg ${
-                role === 'student'
-                  ? 'bg-green-500 hover:bg-green-600'
-                  : 'bg-primary hover:bg-primary-dark'
-              }`}
-            >
-              Sign up as {selectedRole?.sublabel}
-            </button>
-          </form>
-
-          {/* Divider */}
           <p className="text-center text-gray-400 text-sm my-5">Or use social media to sign up</p>
 
-          <div className="space-y-3">
-            <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-              <GoogleIcon /> Sign up with Google
-            </button>
-            <button className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-              <LinkedInIcon /> Sign up with LinkedIn
-            </button>
-          </div>
+          <button
+            onClick={() => authService.googleLogin()}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
+          >
+            <GoogleIcon /> Sign up with Google
+          </button>
         </div>
       </div>
     </main>
