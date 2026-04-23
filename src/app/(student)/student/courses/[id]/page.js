@@ -3,94 +3,197 @@
 import { useState } from 'react';
 import StudentSidebar from '@/landing_page/StudentSidebar';
 import StudentNavbar from '@/landing_page/StudentNavbar';
-import Link from 'next/link';
-import {
-  Star, Users, Clock, ChevronRight, CheckCircle, Play,
-  Download, Globe, Infinity, Award, Monitor, ChevronDown,
-  ChevronUp, Share2, Heart, Tag, Zap
+import { courseService } from '@/services/courseService';
+import { enrollmentService } from '@/services/enrollmentService';
+import { bookmarkService } from '@/services/bookmarkService';
+import { progressService } from '@/services/progressService';
+import ProgressBar from '@/components/ProgressBar';
+import { 
+  Bookmark, BookmarkCheck, Play, Clock, Users, Star, ChevronLeft, 
+  ChevronDown, ChevronRight, Award, Target, ListChecks, User, 
+  GraduationCap, Calendar, Globe, Heart, CheckCircle, Eye
 } from 'lucide-react';
 
-/* ── Data ──────────────────────────────────────────── */
-const course = {
-  id: 1,
-  category: 'USER INTERFACE',
-  title: 'Intro to User Design',
-  subtitle: 'From foundational basics to advanced mastery—expert-led paths designed to turn your ambition into a career.',
-  banner: 'https://images.unsplash.com/photo-1593508512255-86ab42a8e620?w=1200&q=80',
-  price: '$89.99',
-  originalPrice: '$149.99',
-  discount: '40% OFF',
-  rating: 4.8,
-  ratingCount: '451,444',
-  instructors: [
-    { name: 'Jane Cooper',    avatar: 'https://randomuser.me/api/portraits/women/1.jpg' },
-    { name: 'Kristin Watson', avatar: 'https://randomuser.me/api/portraits/women/2.jpg' },
-  ],
-  includes: [
-    { icon: Monitor,  text: '18 hours on-demand video' },
-    { icon: Download, text: '12 downloadable resources' },
-    { icon: Infinity, text: 'Full lifetime access' },
-    { icon: Award,    text: 'Certificate of completion' },
-  ],
-  about: `This course is designed for aspiring designers who want to bridge the gap between aesthetic beauty and functional utility. You will explore the cognitive biases that drive user behavior and learn how to translate those insights into intuitive interaction designs.\n\nWe believe design is not just what it looks like, but how it works. Through a series of hands-on projects, you will develop a portfolio-ready case study starting from user research and wireframing all the way to a polished interactive prototype.`,
-  whatYoullLearn: [
-    'User Psychology & Mental Models',
-    'Advanced Prototyping Techniques',
-  ],
-  prerequisites: [
-    'Basic understanding of digital interfaces',
-    'Access to Figma (free version)',
-  ],
-  curriculum: [
-    { id: 1, title: 'Foundations of Experience Design', lessons: 4, duration: '1h 31m', color: 'bg-yellow-400', items: ['What is User Design?', 'The Designer\'s Mindset'], open: true },
-    { id: 2, title: 'Visual Hierarchies & Layouts',      lessons: 6, duration: '2h 13m', color: 'bg-yellow-400', items: [], open: false },
-    { id: 3, title: 'Prototyping & Interactions',        lessons: 8, duration: '3h 45m', color: 'bg-yellow-400', items: [], open: false },
-  ],
-  instructor: {
-    name: 'John Smith',
-    role: 'Senior UX Lead at TalentFlow',
-    avatar: 'https://randomuser.me/api/portraits/men/36.jpg',
-    rating: 4.5,
-    students: 15302,
-    courses: 12,
-    bio: 'Sarah is a veteran designer with over 12 years of experience building products for Fortune 500 companies. She has mentored over 500+ designers and is a frequent speaker at global design conferences like Config and Adobe MAX.',
-  },
-  reviews: [
-    { id: 1, name: 'Alex Thompson',  avatar: 'https://randomuser.me/api/portraits/men/10.jpg', rating: 5, text: '"This course completely changed the way I think about UI apps. The module on psychological triggers was worth the price alone."' },
-    { id: 2, name: 'Elena Rodriguez', avatar: 'https://randomuser.me/api/portraits/women/11.jpg', rating: 5, text: '"Great production quality and practical assignments. I would highly recommend this to any junior designer."' },
-    { id: 3, name: 'Elena Rodriguez', avatar: 'https://randomuser.me/api/portraits/women/12.jpg', rating: 5, text: '"Great production quality and practical assignments. I would highly recommend this to any junior designer."' },
-  ],
-  whoFor: [
-    'Beginners with no prior experience in design or tech',
-    'Aspiring UI/UX designers who want to learn modern tools',
-    'Freelancers looking to build a profitable design career',
-    'Students or career switchers entering the tech industry',
-    'Anyone interested in designing and building websites without coding',
-  ],
-  requirements: [
-    'No prior design or coding experience required',
-    'A laptop or desktop computer',
-    'Internet connection',
-    'Basic computer knowledge',
-    'Willingness to learn, practice, and stay consistent',
-  ],
-  relatedCourses: [
-    { id: 2, tag: 'DESIGN',  tagColor: 'text-red-500 bg-red-50',    title: 'Learn Python Programming Masterclass',              rating: 4.0, students: '211,434', price: '$57', image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=300&q=80' },
-    { id: 3, tag: 'DESIGN',  tagColor: 'text-blue-500 bg-blue-50',  title: 'Data Structures & Algorithms Essentials (2021)',    rating: 4.7, students: '451,444', price: '$57', image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=300&q=80' },
-    { id: 4, tag: 'DESIGN',  tagColor: 'text-green-600 bg-green-50',title: 'Ultimate Google Ads Training 2020: Profit with Pay Per Click', rating: 4.1, students: '154,817', price: '$57', image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300&q=80' },
-    { id: 5, tag: 'DESIGN',  tagColor: 'text-blue-500 bg-blue-50',  title: 'Data Structures & Algorithms Essentials (2021)',    rating: 4.7, students: '451,444', price: '$57', image: 'https://images.unsplash.com/photo-1593720219276-0b1eacd0aef4?w=300&q=80' },
-  ],
-};
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-function Stars({ rating, size = 14 }) {
-  return (
-    <div className="flex gap-0.5">
-      {[1,2,3,4,5].map(s => (
-        <Star key={s} size={size} className={s <= Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'} />
-      ))}
-    </div>
-  );
-}
+export default function StudentCourseDetail() {
+  const { id } = useParams();
+  const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [openSections, setOpenSections] = useState({});
+  const [courseProgress, setCourseProgress] = useState(0);
+  const [lectureProgress, setLectureProgress] = useState({});
+  const [studentCount, setStudentCount] = useState(0);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/signin');
+      return;
+    }
+    fetchCourseData();
+  }, [id]);
+
+  useEffect(() => {
+    if (isEnrolled && course) {
+      fetchCourseProgress();
+    }
+  }, [isEnrolled, course]);
+
+  useEffect(() => {
+    const handleProgressUpdate = (event) => {
+      if (event.detail?.courseId === id) {
+        fetchCourseProgress();
+      }
+    };
+    
+    window.addEventListener('progressUpdated', handleProgressUpdate);
+    return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
+  }, [id]);
+
+  const fetchStudentCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/enrollments/course/${id}/count`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const count = await response.json();
+        setStudentCount(count);
+        return count;
+      }
+    } catch (err) {
+      console.error('Failed to fetch student count:', err);
+    }
+    return 0;
+  };
+
+  const fetchCourseData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('token');
+      
+      // Fetch course details
+      const courseData = await courseService.getCourseById(id);
+      setCourse(courseData);
+      
+      // Fetch enrollment and bookmark status
+      const [enrolled, bookmarked] = await Promise.all([
+        enrollmentService.checkEnrollment(id).catch(() => false),
+        bookmarkService.isBookmarked(id).catch(() => false),
+      ]);
+      setIsEnrolled(enrolled);
+      setIsBookmarked(bookmarked);
+      
+      // Fetch student count
+      await fetchStudentCount();
+      
+    } catch (err) {
+      console.error('Failed to fetch course:', err);
+      setError(err.message || 'Failed to load course details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCourseProgress = async () => {
+    try {
+      const progress = await progressService.getCourseProgress(id);
+      setCourseProgress(progress);
+      
+      const lecturesProgress = await progressService.getAllLecturesProgress(id);
+      setLectureProgress(lecturesProgress || {});
+    } catch (error) {
+      console.error('Failed to fetch course progress:', error);
+    }
+  };
+
+  const handleEnroll = async () => {
+    setActionLoading(true);
+    try {
+      await enrollmentService.enroll(id);
+      setIsEnrolled(true);
+      
+      // Update student count immediately after enrollment
+      const newCount = await fetchStudentCount();
+      setStudentCount(newCount);
+      
+      alert('Successfully enrolled!');
+    } catch (err) {
+      alert(err.message || 'Failed to enroll');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUnenroll = async () => {
+    if (!confirm('Unenroll? Your progress will be lost.')) return;
+    setActionLoading(true);
+    try {
+      await enrollmentService.unenroll(id);
+      setIsEnrolled(false);
+      setCourseProgress(0);
+      
+      // Update student count immediately after unenrollment
+      const newCount = await fetchStudentCount();
+      setStudentCount(newCount);
+      
+      alert('Successfully unenrolled');
+    } catch (err) {
+      alert(err.message || 'Failed to unenroll');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBookmark = async () => {
+    setActionLoading(true);
+    try {
+      if (isBookmarked) {
+        await bookmarkService.removeBookmark(id);
+        setIsBookmarked(false);
+      } else {
+        await bookmarkService.addBookmark(id);
+        setIsBookmarked(true);
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to update bookmark');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const toggleSection = (index) => {
+    setOpenSections(prev => ({ ...prev, [index]: !prev[index] }));
+  };
+
+  const handleLectureClick = (lecture) => {
+    router.push(`/student/courses/${id}/lectures/${lecture.id}`);
+  };
+
+  const isLectureCompleted = (lectureId) => {
+    return lectureProgress[lectureId] === true;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading course details...</p>
+        </div>
+      </div>
+    );
+  }
 
 function StickyCard() {
   return (
@@ -113,75 +216,63 @@ function StickyCard() {
           Free Preview
         </button>
 
-        <p className="text-center text-gray-400 text-xs mt-3">THIS COURSE INCLUDES:</p>
-        <ul className="space-y-2 mt-2">
-          {course.includes.map(({ icon: Icon, text }) => (
-            <li key={text} className="flex items-center gap-2.5 text-xs text-gray-600">
-              <Icon size={14} className="text-gray-400 flex-shrink-0" />
-              {text}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-t border-gray-100 px-5 py-4">
-        <div className="flex gap-4 text-xs font-semibold border-b border-gray-100 mb-4">
-          {['Overview', 'Curriculum', 'Instructor'].map((t, i) => (
-            <button key={t} className={`pb-2 ${i === 0 ? 'border-b-2 border-primary text-primary' : 'text-gray-400'}`}>{t}</button>
-          ))}
-        </div>
-        {/* mini content */}
-        <p className="text-xs font-bold text-gray-900 mb-2">Course Description</p>
-        <p className="text-xs text-gray-500 leading-relaxed line-clamp-4">
-          Master the art of modern product design and build a career in tech with our Figma UI/UX Design 3-in-1 Course...
-        </p>
-        <p className="text-xs font-bold text-gray-900 mt-3 mb-2">What you will learn in this course</p>
-        {['You will learn how to design beautiful websites using Figma...', 'You will learn how to take your designs and build them into powerful websites...', 'You will learn secret tips of Freelance Web Designers...', 'Learn to use Python professionally...'].map(item => (
-          <div key={item} className="flex items-start gap-2 mb-1.5">
-            <CheckCircle size={12} className="text-primary flex-shrink-0 mt-0.5" />
-            <span className="text-xs text-gray-600 line-clamp-2">{item}</span>
-          </div>
-        ))}
-        <p className="text-xs font-bold text-gray-900 mt-3 mb-2">Who this course is for:</p>
-        {['Beginners with no prior experience...', 'Aspiring UI/UX designers...', 'Freelancers looking to build...', 'Students or career switchers...', 'Anyone interested in designing...'].map(item => (
-          <div key={item} className="flex items-start gap-2 mb-1">
-            <span className="text-gray-400 text-xs mt-0.5">•</span>
-            <span className="text-xs text-gray-600">{item}</span>
-          </div>
-        ))}
-        <p className="text-xs font-bold text-gray-900 mt-3 mb-2">Course requirements</p>
-        {['No prior design or coding experience required', 'A laptop or desktop computer', 'Internet connection', 'Basic computer knowledge', 'Willingness to learn...'].map(item => (
-          <div key={item} className="flex items-start gap-2 mb-1">
-            <span className="text-gray-400 text-xs mt-0.5">•</span>
-            <span className="text-xs text-gray-600">{item}</span>
-          </div>
-        ))}
-        <p className="text-xs font-bold text-gray-900 mt-3 mb-2">Course instructor (02)</p>
-        <div className="flex items-center gap-2 bg-blue-50 rounded-xl p-3">
-          <img src="https://randomuser.me/api/portraits/men/36.jpg" alt="Instructor" className="w-10 h-10 rounded-full object-cover" />
-          <div>
-            <p className="font-bold text-primary text-xs">Vako Shvili</p>
-            <p className="text-gray-400 text-xs">UX Design Lead</p>
-            <p className="text-gray-400 text-xs mt-0.5">Lena brings 10+ years of experience in creating innovative design solutions for tech startups and global brands.</p>
-          </div>
-        </div>
-        <p className="text-xs font-bold text-gray-900 mt-3 mb-2">Students Feedback</p>
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-          <span>5 Star Rating</span>
-          <ChevronDown size={12} />
-        </div>
-        {[
-          { name: 'Guy Hawkins', avatar: 'https://randomuser.me/api/portraits/men/10.jpg', time: '1 week ago', text: 'The course made UI/UX design simple and easy to understand.' },
-          { name: 'Dianne Russell', avatar: 'https://randomuser.me/api/portraits/women/11.jpg', time: '51 mins ago', text: 'A perfect blend of design, development, and freelancing.' },
-          { name: 'Ralph Edwards', avatar: 'https://randomuser.me/api/portraits/men/12.jpg', time: '2 days ago', text: 'The real-life approach and portfolio guidance really stood out.' },
-        ].map(r => (
-          <div key={r.name} className="flex gap-2 mb-3">
-            <img src={r.avatar} alt={r.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-gray-900">{r.name}</span>
-                <span className="text-gray-300 text-xs">• {r.time}</span>
+          {/* Hero Section */}
+          <div className="relative rounded-2xl overflow-hidden mb-8 shadow-xl">
+            <div className="relative h-80 md:h-96 bg-gradient-to-r from-gray-900 to-gray-800">
+              <img 
+                src={course.thumbnailUrl || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80'} 
+                alt={course.title} 
+                className="w-full h-full object-cover opacity-70"
+                onError={(e) => {
+                  e.target.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80';
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent"></div>
+              
+              {/* Bookmark Button */}
+              <button
+                onClick={handleBookmark}
+                disabled={actionLoading}
+                className="absolute top-6 right-6 bg-white/20 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white/30 transition-all duration-300"
+              >
+                {isBookmarked ? (
+                  <BookmarkCheck size={22} className="text-primary fill-primary" />
+                ) : (
+                  <Bookmark size={22} className="text-white" />
+                )}
+              </button>
+            </div>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+              <div className="max-w-4xl">
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <span className="bg-primary/90 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full">
+                    {course.category || 'COURSE'}
+                  </span>
+                  <div className="flex items-center gap-2 text-white/80 text-sm">
+                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                    <span>{course.averageRating || course.rating || '4.8'}</span>
+                    <span className="text-white/50">•</span>
+                    <Users size={14} />
+                    <span>{studentCount} students</span>
+                  </div>
+                </div>
+                <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">{course.title}</h1>
+                <p className="text-white/80 text-lg mb-6 max-w-3xl">{course.subtitle || course.description?.slice(0, 150)}</p>
+                <div className="flex flex-wrap items-center gap-6 text-white/70 text-sm">
+                  <div className="flex items-center gap-2">
+                    <User size={16} />
+                    <span>By <span className="font-semibold text-white">{course.instructor?.name || 'Expert Instructor'}</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} />
+                    <span>Updated {formattedDate}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Globe size={16} />
+                    <span>{course.language || 'English'}</span>
+                  </div>
+                </div>
               </div>
               <Stars rating={5} size={10} />
               <p className="text-xs text-gray-500 mt-0.5">{r.text}</p>
@@ -212,44 +303,29 @@ function StickyCard() {
                   <span className="text-xs text-gray-400">• {rc.students}</span>
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function CourseDetailPage() {
-  const [openSections, setOpenSections] = useState({ 0: true });
-  const toggleSection = (i) => setOpenSections(p => ({ ...p, [i]: !p[i] }));
-
-  return (
-    <>
-      <Navbar />
-      <main className="min-h-screen bg-white">
-        {/* Banner */}
-        <div className="relative h-64 lg:h-80 bg-gray-900 overflow-hidden">
-          <img src={course.banner} alt={course.title} className="w-full h-full object-cover opacity-60" />
-          <div className="absolute inset-0 flex flex-col justify-end p-6 lg:p-10">
-            <span className="inline-block bg-primary text-white text-xs font-bold px-3 py-1 rounded mb-3 w-fit uppercase tracking-wider">
-              {course.category}
-            </span>
-            <h1 className="text-2xl lg:text-4xl font-extrabold text-white mb-2">{course.title}</h1>
-            <p className="text-white/80 text-sm max-w-xl">{course.subtitle}</p>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Star size={22} className="text-yellow-500" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{course.averageRating || course.rating || '4.8'}</p>
+                <p className="text-xs text-gray-500">Rating</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Users size={22} className="text-purple-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{studentCount}</p>
+                <p className="text-xs text-gray-500">Students</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Award size={22} className="text-orange-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{course.sections?.length || 0}</p>
+                <p className="text-xs text-gray-500">Sections</p>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Breadcrumb */}
-        <div className="border-b border-gray-100 py-3 px-4 lg:px-8">
-          <nav className="flex items-center gap-2 text-xs text-gray-400 max-w-7xl mx-auto">
-            <Link href="/" className="hover:text-primary">Home</Link>
-            <ChevronRight size={12} />
-            <Link href="/courses" className="hover:text-primary">Design</Link>
-            <ChevronRight size={12} />
-            <span className="text-gray-600">Figma</span>
-          </nav>
-        </div>
 
         <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
           <div className="grid lg:grid-cols-3 gap-8">
@@ -379,9 +455,22 @@ export default function CourseDetailPage() {
                           <p className="text-xl font-extrabold text-gray-900">{course.instructor.students.toLocaleString()}</p>
                           <p className="text-xs text-gray-400">TOTAL STUDENTS</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-xl font-extrabold text-gray-900">{course.instructor.courses}</p>
-                          <p className="text-xs text-gray-400">COURSES</p>
+                        <div className="flex-1">
+                          <h3 className="text-2xl font-bold text-gray-900 mb-1">{course.instructor?.name || 'Expert Instructor'}</h3>
+                          <p className="text-primary font-medium mb-4">{course.instructor?.role || 'Senior Instructor'}</p>
+                          <p className="text-gray-600 leading-relaxed mb-4">
+                            {course.instructor?.bio || 'Experienced instructor passionate about teaching and helping students master new skills. With years of industry experience, brings real-world knowledge to every lesson.'}
+                          </p>
+                          <div className="flex flex-wrap gap-4 pt-3 border-t border-blue-100">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <GraduationCap size={16} className="text-primary" />
+                              <span>Expert in {course.category || 'Design'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Users size={16} className="text-primary" />
+                              <span>{studentCount}+ students</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <p className="text-gray-500 text-sm leading-relaxed">{course.instructor.bio}</p>

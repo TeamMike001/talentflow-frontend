@@ -3,131 +3,274 @@
 import { useState } from 'react';
 import StudentSidebar from '@/landing_page/StudentSidebar';
 import StudentNavbar from '@/landing_page/StudentNavbar';
-import Link from 'next/link';
+import { courseService } from '@/services/courseService';
+import { enrollmentService } from '@/services/enrollmentService';
+import { bookmarkService } from '@/services/bookmarkService';
+import { Bookmark, BookmarkCheck, Search, Filter, X, Star, Users, ChevronDown, ChevronUp, Clock, Award } from 'lucide-react';
 
-import {
-  ChevronLeft, ChevronRight, Star,
-  ChevronDown, ChevronUp, X, Search, Users,
-} from 'lucide-react';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-// --- DATA ---
-const featuredCourses = [
-  { id: 1,  category: 'Design', title: 'Machine Learning A-Z™: Hands-On Python & R In Data Science',      rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&q=80' },
-  { id: 2,  category: 'Design', title: 'Instagram Marketing 2021: Complete Guide To Instagram Gro...',      rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&q=80' },
-  { id: 3,  category: 'Design', title: 'Mega Digital Marketing Course A-Z: 12 Courses in 1 + Updates',    rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&q=80' },
-  { id: 4,  category: 'Design', title: 'Learn Python Programming Masterclass',                              rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1593720219276-0b1eacd0aef4?w=400&q=80' },
-  { id: 5,  category: 'Design', title: 'Data Structures & Algorithms Essentials (2021)',                    rating: 4.5, students: 181811, image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=80' },
-  { id: 6,  category: 'Design', title: 'Ultimate Google Ads Training 2020: Profit with Pay Per Click',     rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=400&q=80' },
-  { id: 7,  category: 'Design', title: 'Machine Learning A-Z™: Hands-On Python & R In Data Science',      rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=400&q=80' },
-  { id: 8,  category: 'Design', title: 'Instagram Marketing 2021: Complete Guide To Instagram Gro...',      rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&q=80' },
-  { id: 9,  category: 'Design', title: 'Mega Digital Marketing Course A-Z: 12 Courses in 1 + Updates',    rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80' },
-  { id: 10, category: 'Design', title: 'Machine Learning A-Z™: Hands-On Python & R In Data Science',      rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&q=80' },
-  { id: 11, category: 'Design', title: 'Instagram Marketing 2021: Complete Guide To Instagram Gro...',      rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&q=80' },
-  { id: 12, category: 'Design', title: 'Mega Digital Marketing Course A-Z: 12 Courses in 1 + Updates',    rating: 4.6, students: 181811, image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80' },
-];
+export default function BrowseCourses() {
+  const [courses, setCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [enrolledStatus, setEnrolledStatus] = useState({});
+  const [bookmarkedStatus, setBookmarkedStatus] = useState({});
+  const [studentCounts, setStudentCounts] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState({});
+  const [bookmarkLoading, setBookmarkLoading] = useState({});
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [error, setError] = useState('');
+  
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedLevel, setSelectedLevel] = useState('all');
+  const [sortBy, setSortBy] = useState('trending');
+  const [categories, setCategories] = useState([]);
+  const [levels] = useState(['all', 'Beginner', 'Intermediate', 'Advanced', 'All Levels']);
+  
+  // Selected course for modal
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [showCourseModal, setShowCourseModal] = useState(false);
 
-const continueLearning = [
-  { id: 1, icon: '🔷', iconBg: 'bg-blue-500',   status: 'IN PROGRESS', title: 'Foundations of User Centered Design',      meta: 'Lesson 5 of 24 • 10h 24m Left',  completion: 35 },
-  { id: 2, icon: '🔶', iconBg: 'bg-yellow-400', status: 'IN PROGRESS', title: 'Intro to Data Science and Machine Learning', meta: 'Lesson 15 of 24 • 10h 24m Left', completion: 75 },
-  { id: 3, icon: '🟣', iconBg: 'bg-pink-500',   status: 'NEXT UP',     title: 'Principles of User-Focused Design',         meta: 'Prerequisite : Intro to Figma',   completion: 0  },
-];
+  const router = useRouter();
 
-const categories = ['Product management', 'Data Science', 'UX Design', 'Product manager'];
-const ratings    = [5, 4, 3, 2];
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/signin');
+      return;
+    }
+    fetchCourses();
+  }, [router]);
 
-const COURSES_PER_PAGE = 9;
-const TOTAL_PAGES      = 5;
+  useEffect(() => {
+    filterAndSortCourses();
+  }, [searchQuery, courses, selectedCategory, selectedLevel, sortBy]);
 
-// --- COMPONENTS ---
-function FilterSection({ title, children, defaultOpen = true }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="mb-5">
-      <button onClick={() => setOpen(!open)} className="flex items-center justify-between w-full text-left mb-3">
-        <span className="font-bold text-gray-800 text-sm">{title}</span>
-        {open ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
-      </button>
-      {open && children}
-    </div>
-  );
-}
+  // Function to fetch student count for a course
+  const fetchStudentCount = async (courseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/enrollments/course/${courseId}/count`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const count = await response.json();
+        setStudentCounts(prev => ({ ...prev, [courseId]: count }));
+        return count;
+      }
+    } catch (err) {
+      console.error(`Failed to fetch student count for course ${courseId}:`, err);
+    }
+    return 0;
+  };
 
-function StarRating({ rating }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[...Array(5)].map((_, i) => (
-        <Star key={i} size={11}
-          className={i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'} />
-      ))}
-      <span className="text-[10px] text-gray-500 ml-1 font-medium">{rating}</span>
-    </div>
-  );
-}
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await fetch(`${API_BASE_URL}/api/courses/published`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch courses');
+      const data = await response.json();
+      
+      setCourses(data || []);
+      setFilteredCourses(data || []);
+      
+      // Extract unique categories
+      const uniqueCategories = ['all', ...new Set(data.map(c => c.category).filter(Boolean))];
+      setCategories(uniqueCategories);
+      
+      // Fetch enrollment, bookmark status, and student counts for each course
+      const enrollStatusMap = {};
+      const bookmarkStatusMap = {};
+      const countsMap = {};
+      
+      for (const course of (data || [])) {
+        try {
+          const [isEnrolled, isBookmarked, studentCount] = await Promise.all([
+            enrollmentService.checkEnrollment(course.id).catch(() => false),
+            bookmarkService.isBookmarked(course.id).catch(() => false),
+            fetchStudentCount(course.id).catch(() => 0)
+          ]);
+          enrollStatusMap[course.id] = isEnrolled;
+          bookmarkStatusMap[course.id] = isBookmarked;
+          countsMap[course.id] = studentCount;
+        } catch (err) {
+          console.warn(`Failed to get status for course ${course.id}:`, err);
+          enrollStatusMap[course.id] = false;
+          bookmarkStatusMap[course.id] = false;
+          countsMap[course.id] = 0;
+        }
+      }
+      setEnrolledStatus(enrollStatusMap);
+      setBookmarkedStatus(bookmarkStatusMap);
+      setStudentCounts(countsMap);
+    } catch (err) {
+      console.error('Failed to fetch courses:', err);
+      setError(err.message || 'Failed to load courses. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-/* ── Course Card — clicking navigates to CourseDetail ── */
-function CourseCard({ course }) {
-  return (
-    <Link href="/student/CourseDetail" className="block group h-full">
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all h-full">
-        <div className="h-36 sm:h-40 overflow-hidden bg-gray-100">
-          <img src={course.image} alt={course.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        </div>
-        <div className="p-3 sm:p-4">
-          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-orange-500 mb-1.5 block">
-            {course.category}
-          </span>
-          <h3 className="font-bold text-gray-900 text-[11px] sm:text-xs mb-3 leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-blue-600 transition-colors">
-            {course.title}
-          </h3>
-          <StarRating rating={course.rating} />
-          <div className="flex items-center gap-1 mt-1.5">
-            <Users size={10} className="text-gray-400" />
-            <span className="text-[10px] text-gray-400 font-medium">
-              {course.students.toLocaleString()} students
-            </span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
+  const filterAndSortCourses = () => {
+    let filtered = [...courses];
+    
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(course => 
+        course.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.category?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(course => 
+        course.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+    
+    // Level filter
+    if (selectedLevel !== 'all') {
+      filtered = filtered.filter(course => 
+        course.level?.toLowerCase() === selectedLevel.toLowerCase()
+      );
+    }
+    
+    // Sort
+    switch(sortBy) {
+      case 'rating':
+        filtered.sort((a, b) => (b.averageRating || b.rating || 0) - (a.averageRating || a.rating || 0));
+        break;
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+      case 'students':
+        filtered.sort((a, b) => (studentCounts[b.id] || 0) - (studentCounts[a.id] || 0));
+        break;
+      default:
+        filtered.sort((a, b) => (studentCounts[b.id] || 0) - (studentCounts[a.id] || 0));
+    }
+    
+    setFilteredCourses(filtered);
+  };
 
-function Pagination({ currentPage, totalPages, onPageChange }) {
-  return (
-    <div className="flex items-center justify-center gap-2 mt-6">
-      <button onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-        className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-600 transition-all">
-        <ChevronLeft size={14} />
-      </button>
-      {[...Array(totalPages)].map((_, i) => {
-        const page = i + 1;
-        const active = page === currentPage;
-        return (
-          <button key={page} onClick={() => onPageChange(page)}
-            className={`w-8 h-8 rounded-full text-xs font-bold transition-all ${
-              active ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-600'
-            }`}>
-            {String(page).padStart(2, '0')}
-          </button>
-        );
-      })}
-      <button onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-        className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-600 transition-all">
-        <ChevronRight size={14} />
-      </button>
-    </div>
-  );
-}
+  const handleViewCourse = (courseId) => {
+    router.push(`/student/courses/${courseId}`);
+  };
 
-function FilterDrawer({ open, onClose, selectedCategories, setSelectedCategories }) {
-  return (
-    <>
-      <div className={`lg:hidden fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={onClose} />
-      <div className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl p-5 transition-transform duration-300 max-h-[80vh] overflow-y-auto ${open ? 'translate-y-0' : 'translate-y-full'}`}>
-        <div className="flex items-center justify-between mb-5">
-          <span className="font-bold text-gray-900 text-sm">Filters</span>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"><X size={18} /></button>
+  const handleEnroll = async (courseId, e) => {
+    e.stopPropagation();
+    setActionLoading(prev => ({ ...prev, [courseId]: 'enrolling' }));
+    try {
+      await enrollmentService.enroll(courseId);
+      setEnrolledStatus(prev => ({ ...prev, [courseId]: true }));
+      
+      // Update student count immediately after enrollment
+      const newCount = await fetchStudentCount(courseId);
+      setStudentCounts(prev => ({ ...prev, [courseId]: newCount }));
+      
+      alert('Successfully enrolled in the course!');
+    } catch (err) {
+      alert(err.message || 'Failed to enroll');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [courseId]: false }));
+    }
+  };
+
+  const handleUnenroll = async (courseId, e) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to unenroll from this course? Your progress will be lost.')) {
+      return;
+    }
+    setActionLoading(prev => ({ ...prev, [courseId]: 'unenrolling' }));
+    try {
+      await enrollmentService.unenroll(courseId);
+      setEnrolledStatus(prev => ({ ...prev, [courseId]: false }));
+      
+      // Update student count immediately after unenrollment
+      const newCount = await fetchStudentCount(courseId);
+      setStudentCounts(prev => ({ ...prev, [courseId]: newCount }));
+      
+      alert('Successfully unenrolled from the course.');
+    } catch (err) {
+      alert(err.message || 'Failed to unenroll');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [courseId]: false }));
+    }
+  };
+
+  const handleAddBookmark = async (courseId, e) => {
+    e.stopPropagation();
+    setBookmarkLoading(prev => ({ ...prev, [courseId]: true }));
+    try {
+      await bookmarkService.addBookmark(courseId);
+      setBookmarkedStatus(prev => ({ ...prev, [courseId]: true }));
+      alert('Course added to bookmarks!');
+    } catch (err) {
+      console.error('Add bookmark error:', err);
+      alert(err.message || 'Failed to add bookmark');
+    } finally {
+      setBookmarkLoading(prev => ({ ...prev, [courseId]: false }));
+    }
+  };
+
+  const handleRemoveBookmark = async (courseId, e) => {
+    e.stopPropagation();
+    setBookmarkLoading(prev => ({ ...prev, [courseId]: true }));
+    try {
+      await bookmarkService.removeBookmark(courseId);
+      setBookmarkedStatus(prev => ({ ...prev, [courseId]: false }));
+      alert('Bookmark removed!');
+    } catch (err) {
+      console.error('Remove bookmark error:', err);
+      alert(err.message || 'Failed to remove bookmark');
+    } finally {
+      setBookmarkLoading(prev => ({ ...prev, [courseId]: false }));
+    }
+  };
+
+  const openCourseModal = (course) => {
+    setSelectedCourse(course);
+    setShowCourseModal(true);
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setSelectedLevel('all');
+    setSortBy('trending');
+  };
+
+  const sortOptions = [
+    { value: 'trending', label: 'Trending' },
+    { value: 'newest', label: 'Newest' },
+    { value: 'rating', label: 'Highest Rated' },
+    { value: 'students', label: 'Most Popular' }
+  ];
+
+  const activeFilterCount = (selectedCategory !== 'all' ? 1 : 0) + 
+                           (selectedLevel !== 'all' ? 1 : 0) + 
+                           (searchQuery ? 1 : 0) +
+                           (sortBy !== 'trending' ? 1 : 0);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading available courses...</p>
         </div>
         <FilterSection title="Category">
           <div className="space-y-3">
@@ -215,67 +358,226 @@ export default function StudentHome() {
                 <input type="text" placeholder="Search for courses..."
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-gray-700 bg-white/95 outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-400" />
               </div>
-            </div>
-          </section>
+            )}
 
-          {/* ══ 2. FEATURED COURSES ══ */}
-          <section>
-            <div className="mb-4">
-              <h2 className="font-extrabold text-gray-900 text-sm sm:text-base leading-snug">Master New Skills That Matter At Your Own Pace</h2>
-              <p className="text-gray-400 text-[10px] mt-0.5 hidden sm:block">From foundational basics to advanced mastery — expert-led paths designed to turn your ambition into a career.</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {visibleCourses.map((c, idx) => <CourseCard key={`${c.id}-${idx}`} course={c} />)}
-            </div>
-            <Pagination currentPage={currentPage} totalPages={TOTAL_PAGES} onPageChange={setCurrentPage} />
-          </section>
-
-          {/* ══ 3. CONTINUE LEARNING ══ */}
-          <section>
-            <div className="flex items-center gap-4 mb-4">
-              <h2 className="font-extrabold text-gray-900 text-sm whitespace-nowrap">Continue Learning</h2>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {continueLearning.map((item) => (
-                <Link key={item.id} href="/student/CourseDetail" className="block group">
-                  <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm group-hover:border-blue-200 group-hover:shadow-md transition-all">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className={`w-10 h-10 ${item.iconBg} rounded-xl flex items-center justify-center text-lg`}>{item.icon}</div>
-                      <span className="text-[10px] font-bold text-gray-400 tracking-wide">{item.status}</span>
+            {/* Courses Grid */}
+            {filteredCourses.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-2xl border">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">No courses found</h3>
+                <p className="text-gray-500">Try adjusting your search or filters</p>
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCourses.map((course) => {
+                  const isEnrolled = enrolledStatus[course.id];
+                  const isBookmarked = bookmarkedStatus[course.id];
+                  const isLoading = actionLoading[course.id];
+                  const isBookmarkLoading = bookmarkLoading[course.id];
+                  const rating = course.averageRating || course.rating || 4.5;
+                  const studentCount = studentCounts[course.id] || 0;
+                  
+                  return (
+                    <div 
+                      key={course.id} 
+                      onClick={() => handleViewCourse(course.id)}
+                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
+                    >
+                      <div className="relative">
+                        <img 
+                          src={course.thumbnailUrl || course.thumbnail || 'https://via.placeholder.com/600x400?text=Course+Image'} 
+                          alt={course.title} 
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/600x400?text=Course+Image';
+                          }}
+                        />
+                        <button
+                          onClick={(e) => isBookmarked 
+                            ? handleRemoveBookmark(course.id, e) 
+                            : handleAddBookmark(course.id, e)
+                          }
+                          disabled={isBookmarkLoading}
+                          className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors z-10"
+                        >
+                          {isBookmarkLoading ? (
+                            <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                          ) : isBookmarked ? (
+                            <BookmarkCheck size={18} className="text-blue-600 fill-blue-600" />
+                          ) : (
+                            <Bookmark size={18} className="text-gray-500" />
+                          )}
+                        </button>
+                        {course.bestseller && (
+                          <span className="absolute top-3 left-3 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded">
+                            Bestseller
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
+                            {course.category || 'COURSE'}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-medium">{rating.toFixed(1)}</span>
+                            <span className="text-xs text-gray-400">({course.reviewCount || 0})</span>
+                          </div>
+                        </div>
+                        
+                        <h2 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                          {course.title}
+                        </h2>
+                        
+                        <p className="text-gray-500 text-sm line-clamp-2 mb-3">
+                          {course.description}
+                        </p>
+                        
+                        <div className="flex items-center gap-2 mb-4">
+                          <Users size={14} className="text-gray-400" />
+                          <span className="text-xs text-gray-500 font-semibold">
+                            {studentCount} student{studentCount !== 1 ? 's' : ''}
+                          </span>
+                          {course.duration && (
+                            <>
+                              <span className="text-gray-300">•</span>
+                              <Clock size={14} className="text-gray-400" />
+                              <span className="text-xs text-gray-500">{course.duration} hrs</span>
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          {isEnrolled ? (
+                            <button
+                              onClick={(e) => handleUnenroll(course.id, e)}
+                              disabled={isLoading === 'unenrolling'}
+                              className="bg-red-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-red-700 disabled:bg-gray-400 transition-colors"
+                            >
+                              {isLoading === 'unenrolling' ? '...' : 'Unenroll'}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => handleEnroll(course.id, e)}
+                              disabled={isLoading === 'enrolling'}
+                              className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                            >
+                              {isLoading === 'enrolling' ? '...' : 'Enroll Now'}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => openCourseModal(course)}
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          >
+                            Quick View
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="font-bold text-gray-900 text-xs mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors">{item.title}</h3>
-                    <p className="text-gray-400 text-[10px] mb-4">{item.meta}</p>
-                    <div className="flex items-center justify-between text-[10px] mb-1.5">
-                      <span className="text-gray-400 font-medium">Completion</span>
-                      <span className="text-blue-600 font-bold">{item.completion}%</span>
-                    </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${item.completion}%` }} />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-        </main>
-
-        {/* ── FOOTER ── */}
-        <footer className="border-t border-gray-100 bg-white px-6 py-4 mt-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-400">
-            <span>© 2026 Team Mike - UI/UX. All rights reserved.</span>
-            <div className="flex gap-4">
-              <Link href="/faqs" className="hover:text-gray-600">FAQs</Link>
-              <Link href="/privacy" className="hover:text-gray-600">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-gray-600">Terms & Condition</Link>
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </footer>
+        </main>
       </div>
 
-      <FilterDrawer open={filterOpen} onClose={() => setFilterOpen(false)}
-        selectedCategories={selectedCategories} setSelectedCategories={setSelectedCategories} />
+      {/* Course Details Modal */}
+      {showCourseModal && selectedCourse && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCourseModal(false)}>
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="relative h-48 bg-gradient-to-r from-blue-600 to-indigo-600">
+              <img
+                src={selectedCourse.thumbnailUrl || 'https://via.placeholder.com/800x300?text=Course'}
+                alt={selectedCourse.title}
+                className="w-full h-full object-cover opacity-50"
+                onError={(e) => { e.target.src = 'https://via.placeholder.com/800x300?text=Course'; }}
+              />
+              <button
+                onClick={() => setShowCourseModal(false)}
+                className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-semibold text-blue-600 uppercase">{selectedCourse.category || 'COURSE'}</span>
+                <div className="flex items-center gap-1">
+                  <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                  <span className="text-sm font-medium">{(selectedCourse.averageRating || 4.5).toFixed(1)}</span>
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">{selectedCourse.title}</h2>
+              <p className="text-gray-600 mb-6">{selectedCourse.description}</p>
+              
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center p-3 bg-gray-50 rounded-xl">
+                  <Users size={20} className="mx-auto mb-1 text-blue-500" />
+                  <p className="text-lg font-bold">{studentCounts[selectedCourse.id] || 0}</p>
+                  <p className="text-xs text-gray-500">Students</p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-xl">
+                  <Clock size={20} className="mx-auto mb-1 text-blue-500" />
+                  <p className="text-lg font-bold">{selectedCourse.duration || 'Self'}</p>
+                  <p className="text-xs text-gray-500">Duration</p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-xl">
+                  <Award size={20} className="mx-auto mb-1 text-blue-500" />
+                  <p className="text-lg font-bold">{selectedCourse.level || 'All'}</p>
+                  <p className="text-xs text-gray-500">Level</p>
+                </div>
+              </div>
+              
+              {selectedCourse.teaches && selectedCourse.teaches.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">What You'll Learn</h3>
+                  <ul className="space-y-1">
+                    {selectedCourse.teaches.slice(0, 5).map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {selectedCourse.requirements && selectedCourse.requirements.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">Requirements</h3>
+                  <ul className="space-y-1">
+                    {selectedCourse.requirements.slice(0, 5).map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <button
+                onClick={() => {
+                  setShowCourseModal(false);
+                  handleViewCourse(selectedCourse.id);
+                }}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700"
+              >
+                View Full Course Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

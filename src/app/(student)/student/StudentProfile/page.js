@@ -4,14 +4,9 @@ import { useState } from 'react';
 import StudentSidebar from '@/landing_page/StudentSidebar';
 import StudentNavbar from '@/landing_page/StudentNavbar';
 import Link from 'next/link';
-import { BookOpen, Award, Calendar, Clock, TrendingUp } from 'lucide-react';
+import { BookOpen, Award, Calendar, Clock, TrendingUp, RefreshCw } from 'lucide-react';
 
-// ── Learning History data ─────────────────────────────────────────────────────
-const learningHistory = [
-  { id: 1, title: 'Introduction to UIUX',    hours: '10hrs', date: 'November 20, 2025', done: 100, status: 'Completed' },
-  { id: 2, title: 'Frontend Fundamentals',   hours: '15hrs', date: 'February 20, 2026', done: 100, status: 'Completed' },
-  { id: 3, title: 'Database Management',     hours: '20hrs', date: 'April 18, 2026',    done: 100, status: 'Completed' },
-];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // ── Certificates earned ───────────────────────────────────────────────────────
 const certificates = [
@@ -32,7 +27,195 @@ function ProgressBar({ value, color = 'bg-primary' }) {
 
 export default function StudentProfile() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // State for user data
+  const [user, setUser] = useState({
+    name: '',
+    email: '',
+    id: '',
+    role: '',
+    createdAt: ''
+  });
+  
+  // State for learning history (enrolled courses with progress)
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  
+  // State for certificates
+  const [certificates, setCertificates] = useState([]);
+  
+  // Fetch user profile, enrollments, and certificates
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        window.location.href = '/signin';
+        return;
+      }
+      
+      // Fetch user profile
+      const userResponse = await fetch(`${API_BASE_URL}/api/users/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!userResponse.ok) throw new Error('Failed to fetch user profile');
+      const userData = await userResponse.json();
+      setUser(userData);
+      
+      // Fetch enrollments (courses the student is enrolled in)
+      const enrollmentsResponse = await fetch(`${API_BASE_URL}/api/enrollments/my`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (enrollmentsResponse.ok) {
+        const enrollments = await enrollmentsResponse.json();
+        
+        // For each enrollment, fetch full course details and progress
+        const coursesWithProgress = await Promise.all(
+          enrollments.map(async (enrollment) => {
+            try {
+              const courseResponse = await fetch(`${API_BASE_URL}/api/courses/${enrollment.courseId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              
+              if (courseResponse.ok) {
+                const course = await courseResponse.json();
+                
+                // Get detailed progress from progress service
+                let progress = enrollment.progressPercentage || 0;
+                
+                // Try to get more accurate progress from progress endpoint
+                try {
+                  const progressResponse = await fetch(`${API_BASE_URL}/api/progress/courses/${enrollment.courseId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  if (progressResponse.ok) {
+                    const progressData = await progressResponse.json();
+                    progress = progressData.progress || progress;
+                  }
+                } catch (err) {
+                  console.log('Progress endpoint not available, using enrollment progress');
+                }
+                
+                return {
+                  id: course.id,
+                  title: course.title,
+                  progress: progress,
+                  enrolledAt: enrollment.enrolledAt,
+                  thumbnail: course.thumbnailUrl,
+                  status: progress >= 100 ? 'Completed' : 'In Progress'
+                };
+              }
+              return null;
+            } catch (err) {
+              console.error(`Failed to fetch course ${enrollment.courseId}:`, err);
+              return null;
+            }
+          })
+        );
+        
+        setEnrolledCourses(coursesWithProgress.filter(c => c !== null));
+      }
+      
+      // Fetch certificates
+      const certsResponse = await fetch(`${API_BASE_URL}/api/certificates`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (certsResponse.ok) {
+        const certs = await certsResponse.json();
+        setCertificates(certs);
+      }
+      
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+  
+  // Refresh data
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchUserData();
+  };
+  
+  // Listen for progress updates
+  useEffect(() => {
+    const handleProgressUpdate = () => {
+      fetchUserData();
+    };
+    
+    window.addEventListener('progressUpdated', handleProgressUpdate);
+    return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
+  }, []);
+  
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+  
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+  };
+  
+  // Calculate total courses enrolled
+  const totalCourses = enrolledCourses.length;
+  
+  // Calculate total certificates earned
+  const totalCertificates = certificates.length;
+  
+  // Calculate overall progress (average of all course progress)
+  const overallProgress = enrolledCourses.length > 0
+    ? Math.round(enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length)
+    : 0;
+  
+  // Calculate completed courses
+  const completedCourses = enrolledCourses.filter(c => c.progress >= 100).length;
+  
+  // Get initials for avatar placeholder
+  const getInitials = () => {
+    if (!user.name) return 'U';
+    return user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-red-50 text-red-700 p-6 rounded-2xl text-center max-w-md">
+          <p className="mb-4">Error loading profile: {error}</p>
+          <button 
+            onClick={handleRefresh} 
+            className="bg-primary text-white px-4 py-2 rounded-lg"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar — wired up with isOpen + onClose for mobile toggle */}
