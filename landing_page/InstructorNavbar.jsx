@@ -62,7 +62,7 @@ export default function InstructorNavbar({
         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search courses, students..."
+          placeholder="Search"
           className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 outline-none focus:border-primary focus:bg-white transition-all"
         />
       </div>

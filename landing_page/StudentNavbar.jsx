@@ -62,20 +62,20 @@ export default function StudentNavbar({
           </div>
         </div>
 
-        {/* Center: search bar */}
+        {/* Center: search bar — visible md+ */}
         <div className="hidden md:flex items-center gap-2 bg-gray-100 rounded-xl px-4 py-2.5 w-72 lg:w-96 flex-shrink-0">
           <Search size={15} className="text-gray-400 flex-shrink-0" />
           <input
             type="text"
-            placeholder="Search courses..."
+            placeholder="Search..."
             className="bg-transparent text-sm text-gray-600 placeholder-gray-400 focus:outline-none flex-1 min-w-0"
           />
         </div>
 
-        {/* Right: search icon (mobile), bell, user */}
+        {/* Right: search icon (mobile only), bell, user */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
 
-          {/* Search toggle - mobile only */}
+          {/* Search toggle — mobile only */}
           <button
             onClick={() => setSearchOpen(v => !v)}
             className="md:hidden p-2 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"

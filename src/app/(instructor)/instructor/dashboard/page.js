@@ -5,39 +5,41 @@ import InstructorNavbar from '@/landing_page/InstructorNavbar';
 import InstructorFooter from '@/landing_page/InstructorFooter';
 import { useState } from 'react';
 import {
-  Play, Monitor, Users, Trophy, BookOpen, Star, Edit, Plus, Trash2, Eye, UserPlus, GraduationCap, TrendingUp, Award, Clock
+  Play, Monitor, Users, Trophy, BookOpen, ChevronDown, Star, Edit, ArrowDown,
 } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
+<<<<<<< HEAD
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+=======
+// ── Stat cards data ──────────────────────────────────────────────────────────
+const stats = [
+  { icon: <Play    size={20} className="text-blue-500"   />, iconBg: 'bg-blue-50',   value: '20',  label: 'Enrolled Courses'  },
+  { icon: <Monitor size={20} className="text-purple-500" />, iconBg: 'bg-purple-50', value: '9',   label: 'Active Courses'    },
+  { icon: <Users   size={20} className="text-blue-400"   />, iconBg: 'bg-blue-50',   value: '12',  label: 'Course Instructors'},
+  { icon: <Trophy  size={20} className="text-green-500"  />, iconBg: 'bg-green-50',  value: '15',  label: 'Completed Courses' },
+  { icon: <Users   size={20} className="text-blue-400"   />, iconBg: 'bg-blue-50',   value: '523', label: 'Students'          },
+  { icon: <BookOpen size={20} className="text-green-500" />, iconBg: 'bg-green-50',  value: '3',   label: 'Online Courses'    },
+];
+>>>>>>> parent of 4d42df6 (Complete course)
 
-export default function InstructorDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState(null);
-  const [myCourses, setMyCourses] = useState([]);
-  const [allInstructors, setAllInstructors] = useState([]);
-  const [stats, setStats] = useState({
-    totalMyCourses: 0,
-    publishedCourses: 0,
-    totalStudentsEnrolled: 0,
-    totalInstructors: 0
-  });
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [ratingData, setRatingData] = useState({
-    averageRating: 0,
-    ratings: [
-      { stars: 5, percentage: 0 },
-      { stars: 4, percentage: 0 },
-      { stars: 3, percentage: 0 },
-      { stars: 2, percentage: 0 },
-      { stars: 1, percentage: 0 }
-    ]
-  });
+// ── Activity feed ────────────────────────────────────────────────────────────
+const activities = [
+  { avatar: 'https://randomuser.me/api/portraits/men/10.jpg',   text: <><strong>Kevin</strong> comments on your lecture &quot;What is ux&quot; in &quot;2026 ui/ux design with figma&quot;</>,   time: 'Just now'   },
+  { avatar: 'https://randomuser.me/api/portraits/men/11.jpg',   text: <><strong>John</strong> give a 5 star rating on your course &quot;2026 ui/ux design with figma&quot;</>,                  time: '5 mins ago' },
+  { avatar: 'https://randomuser.me/api/portraits/women/12.jpg', text: <><strong>Sraboni</strong> purchase your course &quot;2026 ui/ux design with figma&quot;</>,                               time: '6 mins ago' },
+  { avatar: 'https://randomuser.me/api/portraits/men/13.jpg',   text: <><strong>Monir</strong> give a 5 star rating on your course &quot;2026 ui/ux design with figma&quot;</>,                  time: '8 mins ago' },
+];
 
-  const router = useRouter();
+// ── Rating data ──────────────────────────────────────────────────────────────
+const ratingBars = [
+  { stars: 5, pct: 56   },
+  { stars: 4, pct: 37   },
+  { stars: 3, pct: 8    },
+  { stars: 2, pct: 1    },
+  { stars: 1, pct: 0.5  },
+];
 
+<<<<<<< HEAD
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -243,6 +245,10 @@ export default function InstructorDashboard() {
   };
 
   const StarRow = ({ count, filled }) => (
+=======
+function StarRow({ count, filled }) {
+  return (
+>>>>>>> parent of 4d42df6 (Complete course)
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
@@ -255,16 +261,25 @@ export default function InstructorDashboard() {
   );
 }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+function Sparkline() {
+  return (
+    <svg viewBox="0 0 200 60" className="w-full h-14" fill="none">
+      <polyline
+        points="0,45 25,35 50,42 75,25 100,38 125,20 150,32 175,15 200,28"
+        stroke="#3B82F6"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
+export default function InstructorDashboard() {
+  const [sidebarOpen, setSidebarOpen]     = useState(false);
+  const [activityFilter, setActivityFilter] = useState('Today');
+  const [ratingFilter,   setRatingFilter]   = useState('This week');
 
   // Get the actual name from userData (what they signed up with)
   // Check multiple possible fields where the name could be stored
@@ -305,6 +320,7 @@ export default function InstructorDashboard() {
 
         <main className="flex-1 p-3 sm:p-5 lg:p-6 space-y-4 sm:space-y-5">
 
+<<<<<<< HEAD
           {/* Welcome Section with Dynamic Name */}
           <div className="mb-2">
             <h1 className="text-2xl font-bold text-gray-900">
@@ -314,6 +330,9 @@ export default function InstructorDashboard() {
           </div>
 
           {/* Stats Grid */}
+=======
+          {/* ── Stats Grid — 1 col / 2 col / 4 col ── */}
+>>>>>>> parent of 4d42df6 (Complete course)
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {stats.map((s) => (
               <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
@@ -325,43 +344,7 @@ export default function InstructorDashboard() {
                   <p className="text-gray-400 text-xs mt-0.5">{s.label}</p>
                 </div>
               </div>
-            </div>
-            
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
-                  <Monitor size={20} className="text-green-500" />
-                </div>
-                <div>
-                  <p className="font-extrabold text-gray-900 text-2xl">{stats.publishedCourses}</p>
-                  <p className="text-gray-400 text-xs">Published</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
-                  <Users size={20} className="text-purple-500" />
-                </div>
-                <div>
-                  <p className="font-extrabold text-gray-900 text-2xl">{stats.totalStudentsEnrolled}</p>
-                  <p className="text-gray-400 text-xs">Total Students</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center">
-                  <GraduationCap size={20} className="text-yellow-500" />
-                </div>
-                <div>
-                  <p className="font-extrabold text-gray-900 text-2xl">{stats.totalInstructors}</p>
-                  <p className="text-gray-400 text-xs">Instructors</p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* ── Profile Completion Banner ── */}
@@ -374,6 +357,7 @@ export default function InstructorDashboard() {
             <div className="flex-1 min-w-0">
               <p className="font-bold text-gray-900 text-sm">Jese Leos</p>
               <p className="text-gray-400 text-xs">Jese.leos@gmail.com</p>
+<<<<<<< HEAD
             </div>
 
             {/* Progress — full width on mobile, inline on sm+ */}
@@ -448,6 +432,31 @@ export default function InstructorDashboard() {
             )}
           </div>
 
+=======
+            </div>
+
+            {/* Progress — full width on mobile, inline on sm+ */}
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-shrink-0">
+              <span className="text-xs text-gray-400 whitespace-nowrap">1/4 Steps</span>
+              <div className="flex-1 sm:w-28 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-green-400 rounded-full" style={{ width: '25%' }} />
+              </div>
+              <span className="text-xs text-gray-600 font-semibold whitespace-nowrap">25% Completed</span>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button className="flex items-center gap-2 bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-primary-dark transition-all flex-1 sm:flex-none justify-center">
+                <Edit size={13} />
+                Edit Biography
+              </button>
+              <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-all flex-shrink-0">
+                <ArrowDown size={15} />
+              </button>
+            </div>
+          </div>
+
+>>>>>>> parent of 4d42df6 (Complete course)
           {/* ── Bottom Row: Activity + Rating ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
             {/* Recent Activity */}
