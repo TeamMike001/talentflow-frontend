@@ -81,26 +81,33 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
     return (
       <div className="flex flex-col h-full">
-        {/* Logo + optional close button (mobile only) */}
-        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-xs font-black">TF</span>
-            </div>
-            <span className="font-extrabold text-gray-900 text-sm">
-              Talent<span className="text-blue-600">Flow</span>
-            </span>
-          </div>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="lg:hidden text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-lg hover:bg-gray-100"
-              aria-label="Close menu"
-            >
-              <X size={20} />
-            </button>
-          )}
+      {/* Logo + optional close button (mobile only) */}
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+
+      <div className="flex flex-col items-center">
+        <div className="w-10 h-10 rounded-lg overflow-hidden">
+          <img
+            src="/images/logo.png"
+            alt="Logo"
+            className="w-full h-full object-cover"
+          />
         </div>
+
+        <span className="mt-1 font-extrabold text-blue-600 text-sm leading-none">
+          Learn<span className="text-yellow-500">X</span>
+        </span>
+      </div>
+
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="lg:hidden text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-lg hover:bg-gray-100"
+        >
+          ✕
+        </button>
+      )}
+
+    </div>
 
         {/* Scrollable nav */}
         <nav className="flex-1 px-3 py-4 overflow-y-auto">
