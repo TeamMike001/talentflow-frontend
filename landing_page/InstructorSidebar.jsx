@@ -36,24 +36,32 @@ export default function InstructorSidebar({ isOpen, onClose }) {
   const NavContent = () => (
     <>
       {/* Logo */}
-      <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-2 justify-center flex-1">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white text-xs font-black">TF</span>
-          </div>
-          <span className="font-extrabold text-gray-900 text-sm">
-            Talent<span className="text-blue-600">Flow</span>
-          </span>
+    <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+
+      <div className="flex flex-col items-center">
+        <div className="w-10 h-10 rounded-lg overflow-hidden">
+          <img
+            src="/images/logo.png"
+            alt="Logo"
+            className="w-full h-full object-cover"
+          />
         </div>
-        {/* Close button — mobile only */}
+
+        <span className="mt-1 font-extrabold text-blue-600 text-sm leading-none">
+          Learn<span className="text-yellow-500">X</span>
+        </span>
+      </div>
+
+      {onClose && (
         <button
           onClick={onClose}
-          className="lg:hidden p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
-          aria-label="Close menu"
+          className="lg:hidden text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-lg hover:bg-gray-100"
         >
-          <X size={18} />
+          ✕
         </button>
-      </div>
+      )}
+
+    </div>
 
       {/* Main Nav */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
