@@ -1,9 +1,19 @@
+/* ============================================
+   ALL IMPORTS MUST BE AT THE VERY TOP
+   NO OTHER RULES BEFORE IMPORTS!
+   ============================================ */
+
+/* Google Fonts - MUST BE FIRST */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* Tailwind CSS imports - MUST COME AFTER GOOGLE FONTS BUT BEFORE ANY OTHER CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* ============================================
+   BASE STYLES
+   ============================================ */
 
 /* Reset */
 * {
@@ -19,24 +29,59 @@ body {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Custom scrollbar */
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
+  border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #2563EB;
   border-radius: 3px;
 }
 
-/* Smooth transitions */
-a, button {
+::-webkit-scrollbar-thumb:hover {
+  background: #1d4ed8;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2563EB #f1f5f9;
+}
+
+/* ============================================
+   ELEMENT STYLES
+   ============================================ */
+
+/* Smooth transitions for interactive elements */
+a,
+button {
   transition: all 0.2s ease;
 }
 
-/* Carousel dots */
+/* Focus states for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
+}
+
+/* ============================================
+   CAROUSEL DOTS
+   ============================================ */
+
 .dot {
   width: 24px;
   height: 8px;
@@ -64,14 +109,10 @@ a, button {
   background-color: #2563EB;
 }
 
-/* Utilities */
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
+/* ============================================
+   KEYFRAMES & ANIMATIONS
+   ============================================ */
 
-/* Animations */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -94,10 +135,344 @@ a, button {
   }
 }
 
+@keyframes animateIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   ANIMATION UTILITIES
+   ============================================ */
+
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
 
 .animate-slide-up {
   animation: slide-up 0.2s ease-out;
+}
+
+.animate-in {
+  animation: animateIn 0.2s ease-out;
+}
+
+.slide-in-from-right {
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.slide-in-from-top {
+  animation: slideInFromTop 0.2s ease-out;
+}
+
+.slide-in-from-bottom {
+  animation: slideInFromBottom 0.2s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Animation delays */
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Line clamp utilities */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Hide scrollbar utilities */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* Container padding utility */
+  .container-padding {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* Glass effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
+/* ============================================
+   RESPONSIVE STYLES
+   ============================================ */
+
+/* Better touch targets on mobile */
+@media (max-width: 768px) {
+  button,
+  [role="button"],
+  .clickable,
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent zoom on iOS for form inputs */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Better spacing for mobile */
+  .container-padding {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* Adjust scrollbar for mobile */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container-padding {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 1025px) {
+  .container-padding {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+/* ============================================
+   DARK MODE SUPPORT (Optional)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  /* Add dark mode styles if needed */
+  /* Example: */
+  /* body {
+    background-color: #0f172a;
+    color: #f1f5f9;
+  } */
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white;
+    color: black;
+  }
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================
+   MODAL BACKDROPS
+   ============================================ */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 40;
+}
+
+.modal-backdrop-light {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 40;
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px white inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 50;
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+.toast-top {
+  top: 20px;
+  bottom: auto;
+}
+
+@media (max-width: 640px) {
+  .toast {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
 }

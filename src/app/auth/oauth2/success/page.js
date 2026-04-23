@@ -3,7 +3,8 @@
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://talentflow-backend-9hue.onrender.com';
+const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://talentflow-frontend-theta.vercel.app';
 
 function OAuthSuccessHandler() {
   const router = useRouter();
@@ -14,7 +15,8 @@ function OAuthSuccessHandler() {
     
     console.log('=== OAUTH DEBUG ===');
     console.log('Token received:', token ? 'Yes' : 'No');
-    console.log('Token value:', token?.substring(0, 50) + '...');
+    console.log('Current origin:', window.location.origin);
+    console.log('FRONTEND_URL:', FRONTEND_URL);
     
     if (token) {
       // Store the token
@@ -56,16 +58,16 @@ function OAuthSuccessHandler() {
           console.log('User data fetched:', user);
           localStorage.setItem('user', JSON.stringify(user));
           
-          // Redirect based on role
+          // Redirect based on role - use absolute URL
           const redirectPath = userRole === 'student' 
             ? '/student/dashboard' 
             : '/instructor/dashboard';
           
-          console.log('Redirecting to:', redirectPath);
-          console.log('Current URL:', window.location.href);
+          const fullRedirectUrl = `${FRONTEND_URL}${redirectPath}`;
+          console.log('Redirecting to:', fullRedirectUrl);
           
           // Use window.location for more reliable redirect
-          window.location.href = redirectPath;
+          window.location.href = fullRedirectUrl;
         })
         .catch((error) => {
           console.error('Failed to fetch user data:', error);
@@ -84,16 +86,17 @@ function OAuthSuccessHandler() {
             ? '/student/dashboard' 
             : '/instructor/dashboard';
           
-          console.log('Fallback redirect to:', redirectPath);
-          window.location.href = redirectPath;
+          const fullRedirectUrl = `${FRONTEND_URL}${redirectPath}`;
+          console.log('Fallback redirect to:', fullRedirectUrl);
+          window.location.href = fullRedirectUrl;
         });
       } catch (error) {
         console.error('Failed to decode token:', error);
-        window.location.href = '/signin?error=invalid_token';
+        window.location.href = `${FRONTEND_URL}/signin?error=invalid_token`;
       }
     } else {
       console.log('No token found in URL');
-      window.location.href = '/signin?error=no_token';
+      window.location.href = `${FRONTEND_URL}/signin?error=no_token`;
     }
   }, [router, searchParams]);
   

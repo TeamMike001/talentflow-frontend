@@ -1,4 +1,3 @@
-// src/app/(student)/student/dashboard/page.js
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import StudentNavbar from '@/landing_page/StudentNavbar';
 import Link from 'next/link';
 import { BookOpen, BookMarked, Star, Users, TrendingUp, Clock, Award, CheckCircle, Circle } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://talentflow-backend-9hue.onrender.com';
 
 export default function StudentDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,7 +32,10 @@ export default function StudentDashboard() {
         setLoading(true);
         const token = localStorage.getItem('token');
         
+        console.log('Token exists:', !!token);
+        
         if (!token) {
+          console.log('No token found, redirecting to signin');
           router.push('/signin');
           return;
         }
@@ -47,6 +49,9 @@ export default function StudentDashboard() {
           const user = await userResponse.json();
           setUserData(user);
           localStorage.setItem('user', JSON.stringify(user));
+          console.log('User data loaded:', user);
+        } else {
+          console.error('Failed to fetch user data:', userResponse.status);
         }
 
         // Fetch enrolled courses with progress
@@ -59,6 +64,7 @@ export default function StudentDashboard() {
         
         if (enrolledResponse.ok) {
           enrollments = await enrolledResponse.json();
+          console.log('Enrollments fetched:', enrollments.length);
           
           // Fetch full course details for each enrollment
           coursesWithProgress = await Promise.all(
@@ -129,7 +135,7 @@ export default function StudentDashboard() {
         }
 
       } catch (err) {
-        console.error(err);
+        console.error('Dashboard error:', err);
         setError("Failed to load dashboard data. Please refresh the page.");
       } finally {
         setLoading(false);

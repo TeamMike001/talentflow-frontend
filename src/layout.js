@@ -1,24 +1,38 @@
-import './globals.css';
+'use client';
 
-export const metadata = {
-  title: 'TalentFlow - Learn Smarter',
-  description: 'All your learning, assignments, and progress in one place.',
-};
+import { useState, useEffect } from 'react';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminNavbar from '@/components/admin/AdminNavbar';
 
-export default function RootLayout({ children }) {
+export default function AdminLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true); // Auto-open sidebar on desktop
+      } else {
+        setSidebarOpen(false); // Keep closed on mobile
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-sans bg-white text-gray-900 antialiased">
-        {children}
-      </body>
-    </html>
+    <div className="min-h-screen bg-gray-50">
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      <div className={`transition-all duration-300 ${sidebarOpen && !isMobile ? 'lg:ml-64' : 'ml-0'}`}>
+        <AdminNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        <main className="p-4 sm:p-6">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }

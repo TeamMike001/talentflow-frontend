@@ -10,9 +10,10 @@
   },
   "dependencies": {
     "@stomp/stompjs": "^7.3.0",
+    "emoji-picker-react": "^4.18.0",
     "latest": "^0.2.0",
     "lucide-react": "^0.383.0",
-    "next": "^14.2.35",
+    "next": "^16.2.4",
     "react": "^18",
     "react-dom": "^18",
     "sockjs-client": "^1.6.1",
