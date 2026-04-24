@@ -10,10 +10,11 @@ import { enrollmentService } from '@/services/enrollmentService';
 import { bookmarkService } from '@/services/bookmarkService';
 import { progressService } from '@/services/progressService';
 import ProgressBar from '@/components/ProgressBar';
+import LecturePlayer from '@/components/LecturePlayer';
 import { 
   Bookmark, BookmarkCheck, Play, Clock, Users, Star, ChevronLeft, 
   ChevronDown, ChevronRight, Award, Target, ListChecks, User, 
-  GraduationCap, Calendar, Globe, Heart, CheckCircle, Eye
+  GraduationCap, Calendar, Globe, Heart, CheckCircle, Eye, FileText
 } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -33,6 +34,7 @@ export default function StudentCourseDetail() {
   const [courseProgress, setCourseProgress] = useState(0);
   const [lectureProgress, setLectureProgress] = useState({});
   const [studentCount, setStudentCount] = useState(0);
+  const [selectedLecture, setSelectedLecture] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -87,6 +89,8 @@ export default function StudentCourseDetail() {
       // Fetch course details
       const courseData = await courseService.getCourseById(id);
       setCourse(courseData);
+      const firstLecture = courseData.sections?.flatMap(section => section.lectures || [])[0] || null;
+      setSelectedLecture(firstLecture);
       
       // Fetch enrollment and bookmark status
       const [enrolled, bookmarked] = await Promise.all([
@@ -179,7 +183,8 @@ export default function StudentCourseDetail() {
   };
 
   const handleLectureClick = (lecture) => {
-    router.push(`/student/courses/${id}/lectures/${lecture.id}`);
+    setSelectedLecture(lecture);
+    setActiveTab('curriculum');
   };
 
   const isLectureCompleted = (lectureId) => {
@@ -221,6 +226,9 @@ export default function StudentCourseDetail() {
   const totalLectures = course.sections?.reduce((acc, section) => acc + (section.lectures?.length || 0), 0) || 0;
   const completedLectures = Object.values(lectureProgress).filter(v => v === true).length;
   const formattedDate = course.createdAt ? new Date(course.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Recently';
+  const learningItems = course.sections?.flatMap(section => section.lectures || []) || [];
+  const lessonsWithVideo = learningItems.filter(lecture => lecture.videoUrl?.trim()).length;
+  const lessonsWithNotes = learningItems.filter(lecture => lecture.description?.trim()).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
@@ -450,8 +458,43 @@ export default function StudentCourseDetail() {
 
                   {/* Curriculum Tab */}
                   {activeTab === 'curriculum' && (
-                    <div>
+                    <div className="space-y-6">
                       <h3 className="text-xl font-bold text-gray-900 mb-4">Course Content</h3>
+                      {selectedLecture && (
+                        <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
+                          <div className="mb-4 flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600">Now learning</p>
+                              <h4 className="mt-1 text-lg font-bold text-gray-900">{selectedLecture.name}</h4>
+                            </div>
+                            {!isEnrolled && (
+                              <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-600">
+                                Enroll to unlock lesson content
+                              </span>
+                            )}
+                          </div>
+
+                          {isEnrolled ? (
+                            <LecturePlayer
+                              courseId={id}
+                              lectureId={selectedLecture.id}
+                              lectureTitle={selectedLecture.name}
+                              videoUrl={selectedLecture.videoUrl}
+                              lectureNotes={selectedLecture.description}
+                              onComplete={fetchCourseProgress}
+                            />
+                          ) : (
+                            <div className="rounded-2xl border border-dashed border-blue-200 bg-white p-6 text-center">
+                              <Play size={32} className="mx-auto mb-3 text-blue-600" />
+                              <p className="font-semibold text-gray-900">Lesson content is ready</p>
+                              <p className="mt-2 text-sm text-gray-500">
+                                Enroll in this course to watch the videos, read the notes, and have each lesson count toward your progress bar.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {course.sections && course.sections.length > 0 ? (
                         <div className="space-y-3">
                           {course.sections.map((section, idx) => (
@@ -474,11 +517,23 @@ export default function StudentCourseDetail() {
                                     <button
                                       key={lIdx}
                                       onClick={() => handleLectureClick(lecture)}
-                                      className="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                      className={`w-full px-5 py-3 flex items-center justify-between transition-colors ${
+                                        selectedLecture?.id === lecture.id ? 'bg-blue-50' : 'hover:bg-gray-50'
+                                      }`}
                                     >
                                       <div className="flex items-center gap-3">
-                                        <Play size={14} className={isLectureCompleted(lecture.id) ? 'text-green-500' : 'text-primary'} />
-                                        <span className="text-gray-700">{lecture.name}</span>
+                                        {lecture.videoUrl ? (
+                                          <Play size={14} className={isLectureCompleted(lecture.id) ? 'text-green-500' : 'text-primary'} />
+                                        ) : (
+                                          <FileText size={14} className={isLectureCompleted(lecture.id) ? 'text-green-500' : 'text-slate-500'} />
+                                        )}
+                                        <div className="text-left">
+                                          <span className="block text-gray-700">{lecture.name}</span>
+                                          <span className="block text-xs text-gray-400">
+                                            {lecture.videoUrl ? 'Video lesson' : 'Reading lesson'}
+                                            {lecture.description?.trim() ? ' with notes' : ''}
+                                          </span>
+                                        </div>
                                       </div>
                                       {isLectureCompleted(lecture.id) && (
                                         <CheckCircle size={14} className="text-green-500" />
@@ -591,7 +646,7 @@ export default function StudentCourseDetail() {
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li className="flex items-center gap-2">
                       <Play size={14} className="text-primary" />
-                      <span>{totalLectures} on-demand video lectures</span>
+                      <span>{lessonsWithVideo} video lessons and {lessonsWithNotes} note-based lessons</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Award size={14} className="text-primary" />

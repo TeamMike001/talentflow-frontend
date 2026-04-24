@@ -31,6 +31,7 @@ export default function CreateCoursePage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -70,15 +71,13 @@ export default function CreateCoursePage() {
   const [requirements, setRequirements] = useState([]);
   const [newRequirement, setNewRequirement] = useState('');
 
-  // Upload thumbnail to server - FIXED ENDPOINT
-  const uploadThumbnail = async (file) => {
+  const uploadFileToFolder = async (file, folder) => {
     const formData = new FormData();
     formData.append('file', file);
     
     const token = localStorage.getItem('token');
     
-    // Use the correct endpoint from your backend
-    const response = await fetch(`${API_BASE_URL}/api/upload?folder=thumbnails`, {
+    const response = await fetch(`${API_BASE_URL}/api/upload?folder=${folder}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -90,9 +89,12 @@ export default function CreateCoursePage() {
       const errorText = await response.text();
       throw new Error(errorText || 'Upload failed');
     }
-    const url = await response.text(); // Backend returns URL as string
+    const url = await response.text();
     return url;
   };
+
+  const uploadThumbnail = async (file) => uploadFileToFolder(file, 'thumbnails');
+  const uploadLessonVideo = async (file) => uploadFileToFolder(file, 'course-videos');
 
   const handleThumbnailChange = async (e) => {
     const file = e.target.files[0];
@@ -135,6 +137,34 @@ export default function CreateCoursePage() {
     setThumbnailUrl('');
     if (thumbnail) {
       URL.revokeObjectURL(thumbnailPreview);
+    }
+  };
+
+  const handleLectureVideoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      setError('Only video files are allowed for lesson uploads');
+      return;
+    }
+
+    if (file.size > 200 * 1024 * 1024) {
+      setError('Lesson video must be less than 200MB');
+      return;
+    }
+
+    setUploadingVideo(true);
+    setError('');
+    try {
+      const url = await uploadLessonVideo(file);
+      setEditingLecture(prev => ({ ...prev, videoUrl: url }));
+    } catch (err) {
+      console.error('Video upload error:', err);
+      setError('Failed to upload lesson video: ' + err.message);
+    } finally {
+      setUploadingVideo(false);
+      e.target.value = '';
     }
   };
 
@@ -798,7 +828,7 @@ export default function CreateCoursePage() {
           {/* Lecture Modal */}
           {showLectureModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+              <div className="bg-white rounded-2xl p-6 max-w-lg w-full">
                 <h3 className="text-xl font-bold mb-4">
                   {editingLecture?.id ? 'Edit Lecture' : 'Add Lecture'}
                 </h3>
@@ -810,18 +840,48 @@ export default function CreateCoursePage() {
                     placeholder="Lecture Name"
                     className="w-full p-3 border rounded-xl"
                   />
-                  <input
-                    type="text"
-                    value={editingLecture?.videoUrl || ''}
-                    onChange={(e) => setEditingLecture({...editingLecture, videoUrl: e.target.value})}
-                    placeholder="Video URL (YouTube, Vimeo, or direct link)"
-                    className="w-full p-3 border rounded-xl"
-                  />
+                  <div className="space-y-3 rounded-xl border border-gray-200 p-4">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">Video URL</label>
+                      <input
+                        type="text"
+                        value={editingLecture?.videoUrl || ''}
+                        onChange={(e) => setEditingLecture({...editingLecture, videoUrl: e.target.value})}
+                        placeholder="Paste YouTube, Vimeo, or direct video link"
+                        className="w-full p-3 border rounded-xl"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <label
+                        htmlFor="lecture-video-upload"
+                        className={`inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 font-medium text-white ${
+                          uploadingVideo ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                      >
+                        <Upload size={16} />
+                        {uploadingVideo ? 'Uploading video...' : 'Upload Video File'}
+                      </label>
+                      <input
+                        id="lecture-video-upload"
+                        type="file"
+                        accept="video/*"
+                        onChange={handleLectureVideoUpload}
+                        className="hidden"
+                        disabled={uploadingVideo}
+                      />
+                      <span className="text-xs text-gray-500">MP4, MOV, WEBM up to 200MB</span>
+                    </div>
+                    {editingLecture?.videoUrl && (
+                      <p className="text-xs text-green-600 break-all">
+                        Video ready: {editingLecture.videoUrl}
+                      </p>
+                    )}
+                  </div>
                   <textarea
                     value={editingLecture?.description || ''}
                     onChange={(e) => setEditingLecture({...editingLecture, description: e.target.value})}
-                    placeholder="Lecture description (optional)"
-                    rows={3}
+                    placeholder="Lesson notes or reading material (optional)"
+                    rows={5}
                     className="w-full p-3 border rounded-xl"
                   />
                 </div>

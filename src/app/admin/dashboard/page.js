@@ -190,7 +190,7 @@ export default function AdminDashboard() {
           <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{value}</p>
         </div>
         <div className={`w-10 h-10 sm:w-12 sm:h-12 ${color} rounded-2xl flex items-center justify-center`}>
-          <Icon size={20} sm:size={24} className="text-white" />
+          <Icon size={20} className="text-white" />
         </div>
       </div>
     </div>
